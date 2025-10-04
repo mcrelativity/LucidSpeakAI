@@ -187,3 +187,75 @@ async def upload_audio(file: UploadFile = File(...)):
         "scores": scores,
         "feedback": feedback
     }
+
+
+@app.post("/insights/")
+async def insights(payload: dict):
+    """Genera insights accionables a partir de transcript + metrics.
+    Espera payload = {"transcript": str, "metrics": { ... }}
+    Si OPENAI_API_KEY está presente y la librería openai está instalada, usa OpenAI;
+    si no, devuelve un mock estructurado para desarrollo.
+    """
+    transcript = payload.get("transcript", "")
+    metrics = payload.get("metrics", {})
+
+    # Estructura de salida esperada
+    result = {
+        "summary": "",
+        "actions": [],
+        "exercise": "",
+        "highlights": [],  # lista de {start_sec, end_sec, text, reason}
+    }
+
+    # Modo OpenAI si está configurado
+    openai_key = os.getenv("OPENAI_API_KEY")
+    try:
+        if openai_key:
+            import openai
+            openai.api_key = openai_key
+            prompt = f"Resume brevemente el siguiente texto en español y da 3 acciones concretas y un ejercicio de 30-60s.\n\nTexto:\n{transcript}\n\nMetrics:\n{metrics}\n\nFormato: JSON con keys summary, actions (lista), exercise." 
+            resp = openai.ChatCompletion.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=512,
+                temperature=0.2,
+            )
+            text = resp.choices[0].message.content
+            # Intentar parsear JSON dentro de la respuesta
+            try:
+                import json
+                parsed = json.loads(text)
+                result.update(parsed)
+            except Exception:
+                result["summary"] = text[:1000]
+                result["actions"] = ["Revisar el feedback manualmente"]
+                result["exercise"] = "Graba 60s enfocándote en pausas intencionales."
+            return result
+    except Exception as e:
+        print("OpenAI call failed or not configured:", e)
+
+    # Modo mock / fallback
+    # Resumen simple: últimas 1-2 oraciones
+    sentences = re.split(r'[\.\?\!]\s+', transcript.strip()) if transcript else []
+    result["summary"] = sentences[0] if sentences else "No hay transcripción disponible."
+    # Basado en métricas sugerimos acciones
+    actions = []
+    pace = metrics.get("pace") or metrics.get("pace", 0)
+    if pace and pace > 170:
+        actions.append("Reduce tu ritmo: introduce pausas de 0.5s después de frases clave.")
+    if metrics.get("disfluencies_per_minute", 0) > 3:
+        actions.append("Practica 60s silencios entre frases para reducir muletillas.")
+    if metrics.get("pitch_variation", 0) < 10:
+        actions.append("Haz ejercicios de entonación: lee en voz alta enfatizando 3 palabras por frase.")
+    if not actions:
+        actions = ["Buen trabajo — mantén esta estrategia: más variedad de tono y pausas." ]
+
+    result["actions"] = actions[:3]
+    result["exercise"] = "Graba 60s repitiendo una historia corta, enfocándote en pausas y variación de tono."
+    # highlights: heurística simple para muletillas y elongaciones (buscar palabras repetidas/elongaciones)
+    highlights = []
+    for m in re.finditer(r"\b(\w+)\b(?=(?:.*\b\1\b))", transcript.lower()):
+        highlights.append({"text": m.group(1), "reason": "repetition"})
+        if len(highlights) >= 5: break
+    result["highlights"] = highlights
+    return result
