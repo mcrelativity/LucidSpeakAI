@@ -27,6 +27,24 @@ const AnalyzingUI = ({ audioBlob, onAnalysisComplete }) => {
                     const data = await response.json();
                     setStatus("Generando feedback...");
                     await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    // Llamar al endpoint /insights para obtener insights accionables
+                    try {
+                        const insightsResp = await fetch("http://localhost:8000/insights/", {
+                            method: "POST",
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ transcript: data.transcription, metrics: { pace: data.pace, disfluencies_per_minute: data.disfluencies_per_minute, pitch_variation: data.pitch_variation } })
+                        });
+                        if (insightsResp.ok) {
+                            const insights = await insightsResp.json();
+                            data.insights = insights;
+                        } else {
+                            data.insights = null;
+                        }
+                    } catch (e) {
+                        data.insights = null;
+                    }
+
                     onAnalysisComplete(data);
                 } else {
                      throw new Error("Analysis failed");

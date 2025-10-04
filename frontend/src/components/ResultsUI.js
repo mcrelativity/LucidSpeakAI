@@ -153,6 +153,22 @@ const ResultsUI = ({ result, history, onReset }) => {
 
             {activeTab === 'Resumen' && (
                 <motion.div initial={{opacity: 0}} animate={{opacity: 1}}>
+                    {result.insights && (
+                        <div className="p-4 bg-slate-900 rounded-lg mb-6">
+                            <h4 className="font-semibold text-sky-400 mb-2">Insights Automatizados</h4>
+                            <p className="text-slate-300 mb-2">{result.insights.summary}</p>
+                            <div className="mb-2">
+                                <h5 className="text-sm text-slate-400 mb-1">Acciones recomendadas</h5>
+                                <ul className="list-disc pl-5 text-slate-300">
+                                    {result.insights.actions?.map((a, i) => <li key={i}>{a}</li>)}
+                                </ul>
+                            </div>
+                            <div className="mb-2">
+                                <h5 className="text-sm text-slate-400 mb-1">Ejercicio sugerido</h5>
+                                <p className="text-slate-300">{result.insights.exercise}</p>
+                            </div>
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                         <div>
                             <h4 className="font-semibold text-slate-400 mb-2 flex items-center"><FaCheckCircle className="mr-2 text-green-400"/> Puntos Fuertes</h4>
@@ -225,7 +241,7 @@ const ResultsUI = ({ result, history, onReset }) => {
                                                 {Object.entries(details).map(([word, count]) => (
                                                     <div key={word} className="bg-slate-700 p-2 rounded-md text-center flex-shrink-0">
                                                         <p className="text-lg font-bold">{count}</p>
-                                                        <p className="text-xs text-slate-400">"{word}"</p>
+                                                        <p className="text-xs text-slate-400">&quot;{word}&quot;</p>
                                                     </div>
                                                 ))}
                                             </div>
