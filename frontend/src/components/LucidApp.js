@@ -79,6 +79,8 @@ const LucidApp = () => {
             duration: result.duration || 0,
             total_words: result.total_words || 0
         };
+        // Guardar resumen de insights de forma plana para mostrar en el historial
+        newEntry.insights_summary = result.insights?.summary || '';
 
         // Actualizar el estado con los resultados
         setAnalysisResult(newEntry);

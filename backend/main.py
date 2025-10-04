@@ -234,28 +234,59 @@ async def insights(payload: dict):
     except Exception as e:
         print("OpenAI call failed or not configured:", e)
 
-    # Modo mock / fallback
-    # Resumen simple: últimas 1-2 oraciones
-    sentences = re.split(r'[\.\?\!]\s+', transcript.strip()) if transcript else []
-    result["summary"] = sentences[0] if sentences else "No hay transcripción disponible."
-    # Basado en métricas sugerimos acciones
+    # Modo mock / fallback: generar un resumen breve y accionable basado en métricas
+    summary_parts = []
+    # Ritmo
+    pace_val = metrics.get("pace", None)
+    if pace_val is not None:
+        if pace_val > 170:
+            summary_parts.append(f"Ritmo rápido ({pace_val} ppm). Considera reducir la velocidad.")
+        elif pace_val < 130 and pace_val > 0:
+            summary_parts.append(f"Ritmo lento ({pace_val} ppm). Podrías aumentar un poco la energía.")
+        else:
+            summary_parts.append(f"Ritmo adecuado ({pace_val} ppm).")
+
+    # Disfluencias
+    dpm = metrics.get("disfluencies_per_minute", 0)
+    if dpm > 5:
+        summary_parts.append(f"Disfluencias altas ({dpm}/min). Trabaja en pausas y control de muletillas.")
+    elif dpm > 0:
+        summary_parts.append(f"Disfluencias moderadas ({dpm}/min). Buen progreso si estás practicando.")
+    else:
+        summary_parts.append("Muy pocas disfluencias detectadas.")
+
+    # Tono
+    pitch = metrics.get("pitch_variation", 0)
+    if pitch and pitch < 10:
+        summary_parts.append("Tono algo monótono; añade mayor variación vocal.")
+    else:
+        summary_parts.append("Buen rango de tono.")
+
+    result["summary"] = " ".join(summary_parts)
+
+    # Acciones sugeridas (priorizadas)
     actions = []
-    pace = metrics.get("pace") or metrics.get("pace", 0)
-    if pace and pace > 170:
-        actions.append("Reduce tu ritmo: introduce pausas de 0.5s después de frases clave.")
-    if metrics.get("disfluencies_per_minute", 0) > 3:
-        actions.append("Practica 60s silencios entre frases para reducir muletillas.")
-    if metrics.get("pitch_variation", 0) < 10:
-        actions.append("Haz ejercicios de entonación: lee en voz alta enfatizando 3 palabras por frase.")
+    if dpm > 3:
+        actions.append("Practica silencios intencionales entre frases por 60s para reducir muletillas.")
+    if pace_val and pace_val > 170:
+        actions.append("Haz pausas cortas (0.5s) después de frases clave para desacelerar.")
+    if pitch and pitch < 10:
+        actions.append("Ejercicio: leer un párrafo enfatizando 3 palabras diferentes por frase.")
     if not actions:
-        actions = ["Buen trabajo — mantén esta estrategia: más variedad de tono y pausas." ]
+        actions.append("Mantén la práctica actual: enfócate en variación de tono y pausas.")
 
     result["actions"] = actions[:3]
-    result["exercise"] = "Graba 60s repitiendo una historia corta, enfocándote en pausas y variación de tono."
-    # highlights: heurística simple para muletillas y elongaciones (buscar palabras repetidas/elongaciones)
+    result["exercise"] = "Graba 60s narrando una breve historia, aplicando las acciones sugeridas."
+
+    # highlights: extraer ejemplos sencillos de disfluencias a partir de details si existen
     highlights = []
-    for m in re.finditer(r"\b(\w+)\b(?=(?:.*\b\1\b))", transcript.lower()):
-        highlights.append({"text": m.group(1), "reason": "repetition"})
+    details = payload.get("details") or {}
+    # Buscar palabras frecuentes en Muletillas/Alargamientos
+    for cat in ("Muletillas", "Alargamientos"):
+        for w, count in (details.get(cat, {}) or {}).items():
+            highlights.append({"text": w, "reason": cat, "count": count})
+            if len(highlights) >= 5: break
         if len(highlights) >= 5: break
+
     result["highlights"] = highlights
     return result

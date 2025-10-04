@@ -76,6 +76,9 @@ const HistoryCard = ({ item, previousItem }) => {
             <p className="text-sm font-bold text-sky-400 mb-2">
                 {new Date(item.date).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}
             </p>
+            {item.insights_summary && (
+                <p className="text-sm text-slate-300 italic mb-2">{item.insights_summary}</p>
+            )}
             <div className="grid grid-cols-3 gap-4">
                 <MetricComparison label="Ritmo (ppm)" currentValue={item.pace} previousValue={previousItem?.pace} />
                 <MetricComparison label="Disfluencias/Min" currentValue={item.disfluencies_per_minute} previousValue={previousItem?.disfluencies_per_minute} higherIsBetter={false} />
