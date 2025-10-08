@@ -17,6 +17,23 @@ venv/
 .env.*
 env.local
 secrets.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!jsconfig.json
+
+# Google Cloud credentials
+backend/lucidspeak-*.json
+
+# Sensitive data
+data/
+backend/duda.py
+backend/m.py
+run_backend.pid
+tmp_test_wavs/
+externals/
+models/
 
 # OS
 .DS_Store

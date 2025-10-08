@@ -1,0 +1,8 @@
+torch
+faster-whisper
+webrtcvad
+pydub
+soundfile
+librosa
+numpy
+requests
