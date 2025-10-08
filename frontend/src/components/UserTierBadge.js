@@ -50,7 +50,7 @@ const UserTierBadge = () => {
                     </div>
                     {percentageUsed >= 80 && (
                         <Link 
-                            href="/precios" 
+                            href="/pricing" 
                             className="text-xs text-sky-400 hover:text-sky-300 underline"
                         >
                             {t('upgradeToPro')}
