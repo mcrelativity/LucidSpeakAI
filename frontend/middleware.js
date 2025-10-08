@@ -1,16 +1,24 @@
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { NextResponse } from 'next/server';
 
-export default function LocaleLink({ href, children, ...props }) {
-  const pathname = usePathname();
-  const locale = pathname?.split('/')[1] || 'es';
+export function middleware(request) {
+  const { pathname } = request.nextUrl;
   
-  // If href already includes locale, use as-is
-  if (href.startsWith(`/${locale}/`) || href.startsWith('/en/') || href.startsWith('/es/')) {
-    return <Link href={href} {...props}>{children}</Link>;
+  // Check if pathname already has a locale
+  const pathnameHasLocale = /^\/(en|es)(\/|$)/.test(pathname);
+  
+  // If no locale, redirect to /es (default locale)
+  if (!pathnameHasLocale) {
+    const locale = 'es';
+    request.nextUrl.pathname = `/${locale}${pathname}`;
+    return NextResponse.redirect(request.nextUrl);
   }
   
-  // Otherwise, prepend locale
-  const localizedHref = `/${locale}${href}`;
-  return <Link href={localizedHref} {...props}>{children}</Link>;
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: [
+    // Skip all internal paths (_next, api, static files)
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)' 
+  ],
+};

@@ -134,7 +134,7 @@ export const AuthProvider = ({ children }) => {
         userCacheRef.current = null;
         localStorage.removeItem('authToken');
         sessionStorage.removeItem('authToken');
-        router.push(`/${locale}/login`);
+        router.push(`/${locale}/welcome`);
     }, [router, locale]);
     
     const refreshUser = useCallback(async () => {
