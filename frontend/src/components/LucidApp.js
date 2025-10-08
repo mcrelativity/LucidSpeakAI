@@ -19,17 +19,22 @@ const LucidApp = ({ locale = 'es' }) => {
     const [showSetupModal, setShowSetupModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedSessionForDetails, setSelectedSessionForDetails] = useState(null);
-    const { token, apiBase } = useAuth();
+    const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+    const { token, apiBase, loading: authLoading } = useAuth();
     const t = useTranslations('Dashboard');
     const tCommon = useTranslations('Common');
 
     useEffect(() => {
         if (token) {
             loadSessions();
+        } else if (!authLoading) {
+            // Auth is done loading but no token - stop loading sessions
+            setIsLoadingSessions(false);
         }
-    }, [token]);
+    }, [token, authLoading]);
 
     const loadSessions = async () => {
+        setIsLoadingSessions(true);
         try {
             const response = await fetch(`${apiBase}/sessions/list`, {
                 headers: {
@@ -44,6 +49,8 @@ const LucidApp = ({ locale = 'es' }) => {
             }
         } catch (error) {
             console.error("Error loading sessions:", error);
+        } finally {
+            setIsLoadingSessions(false);
         }
     };
 
@@ -155,92 +162,100 @@ const LucidApp = ({ locale = 'es' }) => {
                         exit={{ opacity: 0, y: -20 }}
                         className="w-full"
                     >
-                        {/* Header Section */}
-                        <div className="text-center mb-8">
-                            <motion.h1 
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ duration: 0.5 }}
-                                className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-sky-400 via-blue-500 to-purple-500 bg-clip-text text-transparent mb-3"
-                            >
-                                Tus Sesiones de Práctica
-                            </motion.h1>
-                            <motion.p 
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="text-slate-400 text-sm sm:text-base"
-                            >
-                                Mejora tu comunicación, una práctica a la vez
-                            </motion.p>
-                        </div>
+                        {/* Loading State */}
+                        {(authLoading || isLoadingSessions) ? (
+                            <div className="flex flex-col items-center justify-center py-20">
+                                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-16 w-16 mb-4 animate-spin border-t-sky-500"></div>
+                                <p className="text-slate-400">Cargando tus sesiones...</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Header Section */}
+                                <div className="text-center mb-8">
+                                    <motion.h1 
+                                        initial={{ scale: 0.9, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.5 }}
+                                        className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-sky-400 via-blue-500 to-purple-500 bg-clip-text text-transparent mb-3"
+                                    >
+                                        Tus Sesiones de Práctica
+                                    </motion.h1>
+                                    <motion.p 
+                                        initial={{ y: 10, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="text-slate-400 text-sm sm:text-base"
+                                    >
+                                        Mejora tu comunicación, una práctica a la vez
+                                    </motion.p>
+                                </div>
 
-                        {/* Stats Overview */}
-                        {sessions.some(s => s.recordings_count > 0) && (
-                            <motion.div 
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className="grid grid-cols-3 gap-3 sm:gap-4 mb-6"
-                            >
-                                <motion.div 
-                                    whileHover={{ scale: 1.05 }}
-                                    className="bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 rounded-xl p-4 text-center backdrop-blur-sm"
-                                >
-                                    <p className="text-3xl sm:text-4xl font-bold text-sky-400 mb-1">
-                                        {sessions.length}
-                                    </p>
-                                    <p className="text-xs text-slate-400">Sesiones</p>
-                                </motion.div>
-                                <motion.div 
-                                    whileHover={{ scale: 1.05 }}
-                                    className="bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/30 rounded-xl p-4 text-center backdrop-blur-sm"
-                                >
-                                    <p className="text-3xl sm:text-4xl font-bold text-purple-400 mb-1">
-                                        {sessions.reduce((sum, s) => sum + s.recordings_count, 0)}
-                                    </p>
-                                    <p className="text-xs text-slate-400">Grabaciones</p>
-                                </motion.div>
-                                <motion.div 
-                                    whileHover={{ scale: 1.05 }}
-                                    className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 text-center backdrop-blur-sm"
-                                >
-                                    <p className="text-3xl sm:text-4xl font-bold text-green-400 mb-1">
-                                        {sessions.filter(s => s.recordings_count > 0).length}
-                                    </p>
-                                    <p className="text-xs text-slate-400">Activas</p>
-                                </motion.div>
-                            </motion.div>
-                        )}
+                                {/* Stats Overview */}
+                                {sessions.some(s => s.recordings_count > 0) && (
+                                    <motion.div 
+                                        initial={{ y: 20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.3 }}
+                                        className="grid grid-cols-3 gap-3 sm:gap-4 mb-6"
+                                    >
+                                        <motion.div 
+                                            whileHover={{ scale: 1.02 }}
+                                            className="bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 rounded-xl p-4 text-center backdrop-blur-sm"
+                                        >
+                                            <p className="text-3xl sm:text-4xl font-bold text-sky-400 mb-1">
+                                                {sessions.length}
+                                            </p>
+                                            <p className="text-xs text-slate-400">Sesiones</p>
+                                        </motion.div>
+                                        <motion.div 
+                                            whileHover={{ scale: 1.02 }}
+                                            className="bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/30 rounded-xl p-4 text-center backdrop-blur-sm"
+                                        >
+                                            <p className="text-3xl sm:text-4xl font-bold text-purple-400 mb-1">
+                                                {sessions.reduce((sum, s) => sum + s.recordings_count, 0)}
+                                            </p>
+                                            <p className="text-xs text-slate-400">Grabaciones</p>
+                                        </motion.div>
+                                        <motion.div 
+                                            whileHover={{ scale: 1.02 }}
+                                            className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 text-center backdrop-blur-sm"
+                                        >
+                                            <p className="text-3xl sm:text-4xl font-bold text-green-400 mb-1">
+                                                {sessions.filter(s => s.recordings_count > 0).length}
+                                            </p>
+                                            <p className="text-xs text-slate-400">Activas</p>
+                                        </motion.div>
+                                    </motion.div>
+                                )}
                         
-                        {/* Create New Session Button */}
-                        <motion.div 
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-center mb-8"
-                        >
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setShowSetupModal(true)}
-                                className="relative bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 shadow-lg shadow-sky-500/50 hover:shadow-xl hover:shadow-sky-500/60"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <span className="text-2xl">+</span>
-                                    <span>Nueva Sesión</span>
-                                </span>
-                                {/* Animated glow effect */}
-                                <motion.div
-                                    className="absolute inset-0 rounded-full bg-sky-400 opacity-0"
-                                    animate={{ opacity: [0, 0.3, 0] }}
-                                    transition={{ duration: 2, repeat: Infinity }}
-                                />
-                            </motion.button>
-                        </motion.div>
+                                {/* Create New Session Button */}
+                                <motion.div 
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="text-center mb-8"
+                                >
+                                    <motion.button
+                                        whileHover={{ scale: 1.03 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={() => setShowSetupModal(true)}
+                                        className="relative bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 shadow-lg shadow-sky-500/50 hover:shadow-xl hover:shadow-sky-500/60"
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <span className="text-2xl">+</span>
+                                            <span>Nueva Sesión</span>
+                                        </span>
+                                        {/* Animated glow effect */}
+                                        <motion.div
+                                            className="absolute inset-0 rounded-full bg-sky-400 opacity-0"
+                                            animate={{ opacity: [0, 0.3, 0] }}
+                                            transition={{ duration: 2, repeat: Infinity }}
+                                        />
+                                    </motion.button>
+                                </motion.div>
 
-                        {/* Sessions List */}
-                        {sessions.length > 0 ? (
+                                {/* Sessions List */}
+                                {sessions.length > 0 ? (
                             <motion.div 
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
@@ -292,8 +307,8 @@ const LucidApp = ({ locale = 'es' }) => {
                                         
                                         <div className="flex gap-2 mt-4">
                                             <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
                                                 onClick={() => selectExistingSession(session.id)}
                                                 className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-all duration-300 hover:shadow-md shadow-sky-500/30 flex items-center justify-center gap-2"
                                             >
@@ -304,8 +319,8 @@ const LucidApp = ({ locale = 'es' }) => {
                                             </motion.button>
                                             {session.recordings_count > 0 && (
                                                 <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
                                                     onClick={() => viewSessionDetails(session.id)}
                                                     className="flex-1 bg-slate-700/70 hover:bg-slate-600/70 border border-slate-600 hover:border-slate-500 text-white text-sm font-semibold py-2.5 rounded-lg transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-2"
                                                 >
@@ -345,8 +360,8 @@ const LucidApp = ({ locale = 'es' }) => {
                                     {t('emptyStateMessage')}
                                 </p>
                                 <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={() => setShowSetupModal(true)}
                                     className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2 shadow-lg shadow-sky-500/30"
                                 >
@@ -354,6 +369,8 @@ const LucidApp = ({ locale = 'es' }) => {
                                     <span>{t('createFirstSession')}</span>
                                 </motion.button>
                             </motion.div>
+                        )}
+                            </>
                         )}
                     </motion.div>
                 )}
