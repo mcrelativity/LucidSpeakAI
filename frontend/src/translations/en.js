@@ -194,6 +194,22 @@ const en = {
       login: "Log in here"
     }
   },
+  Pricing: {
+    title: "Unlock Your Potential",
+    planName: "Pro Plan",
+    price: "$4.99",
+    currency: "USD",
+    billingPeriod: "Monthly subscription",
+    cancelAnytime: "Cancel anytime",
+    loginRequired: "You must log in to subscribe.",
+    processing: "Processing your subscription...",
+    success: "Subscription successful! Redirecting to your account...",
+    errorPayment: "An error occurred with the payment or it was canceled.",
+    errorVerification: "There was a problem verifying your subscription.",
+    errorAuth: "Authentication error. Please log in again.",
+    errorBackend: "The backend could not update the account.",
+    retryButton: "Try again"
+  },
   Common: {
     loading: "Loading...",
     error: "Error",

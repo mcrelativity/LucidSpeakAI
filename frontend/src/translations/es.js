@@ -194,6 +194,22 @@ const es = {
       login: "Inicia sesión aquí"
     }
   },
+  Pricing: {
+    title: "Desbloquea tu Potencial",
+    planName: "Plan Pro",
+    price: "$4.99",
+    currency: "USD",
+    billingPeriod: "Suscripción mensual",
+    cancelAnytime: "Cancela en cualquier momento",
+    loginRequired: "Debes iniciar sesión para poder suscribirte.",
+    processing: "Procesando tu suscripción...",
+    success: "¡Suscripción exitosa! Redirigiendo a tu cuenta...",
+    errorPayment: "Ocurrió un error con el pago o fue cancelado.",
+    errorVerification: "Hubo un problema al verificar tu suscripción.",
+    errorAuth: "Error de autenticación. Por favor, inicia sesión de nuevo.",
+    errorBackend: "El backend no pudo actualizar la cuenta.",
+    retryButton: "Intentar de nuevo"
+  },
   Common: {
     loading: "Cargando...",
     error: "Error",

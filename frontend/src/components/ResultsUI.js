@@ -586,7 +586,11 @@ const ResultsUI = ({ result, sessionData, onReset }) => {
                     {/* Resumen de disfluencias */}
                     <div className="bg-slate-900 rounded-lg p-4 mb-6">
                         <h4 className="font-semibold text-sky-400 mb-3 flex items-center">
-                            <span className="mr-2">📊</span>
+                            <span className="mr-2 w-5 h-5 flex items-center justify-center bg-sky-500/20 rounded border border-sky-500/40">
+                                <svg className="w-3 h-3 text-sky-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                                </svg>
+                            </span>
                             Resumen de Disfluencias
                         </h4>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
