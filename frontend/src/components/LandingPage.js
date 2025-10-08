@@ -50,7 +50,7 @@ export default function LandingPage() {
             <p className="text-lg md:text-xl text-slate-400 max-w-xl mx-auto md:mx-0 mb-8">
               {t('LandingPage.heroSubtitle')}
             </p>
-            <Link href="/registrarse" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform duration-300 hover:scale-105 inline-block">
+            <Link href="/register" className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform duration-300 hover:scale-105 inline-block">
               {t('LandingPage.heroButton')}
             </Link>
           </div>
@@ -129,7 +129,7 @@ export default function LandingPage() {
         >
           <h2 className="text-3xl font-bold text-white mb-4">{t('LandingPage.finalCtaTitle')}</h2>
           <p className="text-slate-400 mb-8">{t('LandingPage.finalCtaSubtitle')}</p>
-          <Link href="/registrarse" className="bg-white text-slate-900 font-bold py-3 px-8 rounded-full text-lg transition-transform duration-300 hover:scale-105 inline-block">
+          <Link href="/register" className="bg-white text-slate-900 font-bold py-3 px-8 rounded-full text-lg transition-transform duration-300 hover:scale-105 inline-block">
             {t('LandingPage.finalCtaButton')}
           </Link>
         </motion.div>

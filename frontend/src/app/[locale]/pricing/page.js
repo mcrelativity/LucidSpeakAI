@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { useState } from 'react';
@@ -8,10 +8,14 @@ import { motion } from 'framer-motion';
 
 export default function PricingPage() {
     const router = useRouter();
+    const pathname = usePathname();
     const { user, token, apiBase } = useAuth();
     const [{ isPending }] = usePayPalScriptReducer();
     const [status, setStatus] = useState({ state: 'idle', message: '' });
     const t = useTranslations('Pricing');
+    
+    // Extract locale from pathname
+    const locale = pathname?.split('/')[1] || 'es';
 
     // Monthly subscription - $4.99/month
     const createSubscription = (data, actions) => {
@@ -40,7 +44,7 @@ export default function PricingPage() {
             }
 
             setStatus({ state: 'success', message: t('success') });
-            setTimeout(() => { router.push('/account'); }, 2000);
+            setTimeout(() => { router.push(`/${locale}/account`); }, 2000);
 
         } catch (error) {
             console.error("Error en el flujo de aprobación:", error);
