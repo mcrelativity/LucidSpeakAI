@@ -8,7 +8,8 @@ export function Providers({ children, locale }) {
   const initialPayPalOptions = {
     "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID,
     currency: "USD",
-    intent: "capture",
+    intent: "subscription",
+    vault: true,
   };
 
   return (
