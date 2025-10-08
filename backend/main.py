@@ -1438,18 +1438,24 @@ async def confirm_subscription(
     user_email = user.get("email")
     print(f"Confirmando suscripción {subscription_id} para el usuario {user_email}")
     
-    # Update user tier and store subscription ID
+    # Calculate subscription dates (30 days billing cycle)
+    current_time = int(time.time())
+    end_date = current_time + (30 * 24 * 60 * 60)  # 30 days from now
+    
+    # Update user tier and store subscription ID with dates
     supabase.table("users").update({
         "tier": "pro",
         "subscription_id": subscription_id,
-        "subscription_status": "active"
+        "subscription_status": "active",
+        "subscription_start_date": current_time,
+        "subscription_end_date": end_date
     }).eq("email", user_email).execute()
     
     # Log subscription activation
     supabase.table("payments").insert({
         "order_id": subscription_id,
         "user_email": user_email,
-        "timestamp": int(time.time()),
+        "timestamp": current_time,
         "event": "subscription_activated"
     }).execute()
     
@@ -1514,17 +1520,23 @@ async def reactivate_subscription(
     
     print(f"Reactivando suscripción {subscription_id} para el usuario {user_email}")
     
+    # Calculate new subscription dates (30 days billing cycle)
+    current_time = int(time.time())
+    end_date = current_time + (30 * 24 * 60 * 60)  # 30 days from now
+    
     # Update user tier back to pro and mark subscription as active
     supabase.table("users").update({
         "tier": "pro",
-        "subscription_status": "active"
+        "subscription_status": "active",
+        "subscription_start_date": current_time,
+        "subscription_end_date": end_date
     }).eq("email", user_email).execute()
     
     # Log subscription reactivation
     supabase.table("payments").insert({
-        "order_id": subscription_id or "unknown",
+        "order_id": subscription_id or "reactivated",
         "user_email": user_email,
-        "timestamp": int(time.time()),
+        "timestamp": current_time,
         "event": "subscription_reactivated"
     }).execute()
     

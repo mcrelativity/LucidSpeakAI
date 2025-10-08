@@ -100,14 +100,6 @@ export default function AccountPage() {
         });
     };
 
-    // Calculate next billing date (30 days from subscription start or last billing)
-    const getNextBillingDate = () => {
-        if (!user.subscription_start_date) return null;
-        const nextBilling = new Date((user.subscription_start_date * 1000));
-        nextBilling.setDate(nextBilling.getDate() + 30);
-        return Math.floor(nextBilling.getTime() / 1000);
-    };
-
     if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
@@ -184,10 +176,10 @@ export default function AccountPage() {
                             </div>
 
                             {/* Show next billing date if active, or end date if cancelled */}
-                            {isActive && getNextBillingDate() && (
+                            {isActive && user.subscription_end_date && (
                                 <div className="flex justify-between items-center border-b border-slate-700 pb-3">
                                     <span className="font-bold text-slate-400">{t('nextBillingDate')}:</span>
-                                    <span className="text-white">{formatDate(getNextBillingDate())}</span>
+                                    <span className="text-white">{formatDate(user.subscription_end_date)}</span>
                                 </div>
                             )}
 
