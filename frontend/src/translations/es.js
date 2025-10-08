@@ -292,6 +292,10 @@ const es = {
     reactivateSuccess: "Suscripción reactivada exitosamente",
     reactivateError: "Error al reactivar la suscripción. Por favor intenta de nuevo.",
     reactivating: "Reactivando...",
+    reactivateConfirmTitle: "¿Reactivar suscripción?",
+    reactivateConfirmMessage: "¿Estás seguro de que deseas reactivar tu suscripción Pro? Se te cobrará $4.99/mes a partir de ahora.",
+    reactivateConfirmButton: "Sí, Reactivar",
+    cancel: "Cancelar",
     cancelledNotice: "Tu suscripción ha sido cancelada pero seguirás teniendo acceso a las funciones Pro hasta la fecha de finalización."
   }
 };

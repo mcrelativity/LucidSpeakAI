@@ -12,6 +12,7 @@ export default function AccountPage() {
     const pathname = usePathname();
     const t = useTranslations('Account');
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showReactivateModal, setShowReactivateModal] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     
@@ -210,7 +211,7 @@ export default function AccountPage() {
                                 </button>
                             ) : (
                                 <button
-                                    onClick={handleReactivateSubscription}
+                                    onClick={() => setShowReactivateModal(true)}
                                     disabled={processing}
                                     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                                 >
@@ -246,20 +247,6 @@ export default function AccountPage() {
                         </Link>
                     </motion.div>
                 )}
-
-                {/* Logout Button */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    <button 
-                        onClick={logout} 
-                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                    >
-                        {t('logout')}
-                    </button>
-                </motion.div>
             </div>
 
             {/* Cancel Confirmation Modal */}
@@ -289,6 +276,42 @@ export default function AccountPage() {
                                 className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                             >
                                 {t('cancelKeepButton')}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Reactivate Confirmation Modal */}
+            {showReactivateModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md w-full"
+                    >
+                        <h3 className="text-2xl font-bold text-white mb-4">{t('reactivateConfirmTitle')}</h3>
+                        <p className="text-slate-300 mb-6">
+                            {t('reactivateConfirmMessage')}
+                        </p>
+                        
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowReactivateModal(false);
+                                    handleReactivateSubscription();
+                                }}
+                                disabled={processing}
+                                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                            >
+                                {processing ? t('reactivating') : t('reactivateConfirmButton')}
+                            </button>
+                            <button
+                                onClick={() => setShowReactivateModal(false)}
+                                disabled={processing}
+                                className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                            >
+                                {t('cancel')}
                             </button>
                         </div>
                     </motion.div>

@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 export default function PricingPage() {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, token, apiBase } = useAuth();
+    const { user, token, apiBase, refreshUser } = useAuth();
     const [{ isPending }] = usePayPalScriptReducer();
     const [status, setStatus] = useState({ state: 'idle', message: '' });
     const t = useTranslations('Pricing');
@@ -42,6 +42,9 @@ export default function PricingPage() {
                 const errorData = await response.json();
                 throw new Error(errorData.detail || t('errorBackend'));
             }
+
+            // Refresh user data to get updated subscription status
+            await refreshUser();
 
             setStatus({ state: 'success', message: t('success') });
             setTimeout(() => { router.push(`/${locale}/account`); }, 2000);
