@@ -181,55 +181,90 @@ def analyze_conviction(transcript: str):
     
     # EXPANDED: Comprehensive filler words and phrases
     filler_phrases = {
-        # Spanish
+        # Spanish multi-word fillers
         "o sea", "en plan", "tipo que", "es que", "como que", "la verdad", "o sea que",
         "digamos que", "por así decirlo", "de alguna manera", "en cierto modo",
         "vamos a ver", "a ver", "cómo te diría", "qué sé yo", "no sé",
-        # English  
+        "la cosa es", "al final", "entre comillas", "por decirlo así", "si se quiere",
+        "de hecho", "en realidad", "en fin", "ya sabes", "sabes qué",
+        # English multi-word fillers
         "you know", "i mean", "kind of like", "sort of", "you see", "let me see",
-        "how do i say", "what can i say", "you know what i mean", "basically"
+        "how do i say", "what can i say", "you know what i mean", "basically",
+        "to be honest", "at the end of the day", "if you will", "per se",
+        "in a sense", "in a way", "more or less", "pretty much", "i guess",
+        "i suppose", "let's say", "shall we say", "so to speak"
     }
     
-    # EXPANDED: More filler words with contextual filtering
+    # MASSIVELY EXPANDED: 50+ English and 60+ Spanish filler words
     filler_words_all = {
-        # Spanish fillers
+        # Spanish fillers (60+)
         "eh", "em", "este", "pues", "bueno", "vale", "mmm", "ajá", "claro",
-        "entonces", "mira", "oye", "tío", "tía", "wey", "güey", "osea",
-        # English fillers
-        "uh", "um", "like", "so", "well", "actually", "basically", "literally",
-        "seriously", "honestly", "right", "okay", "yeah", "yep", "nah"
+        "entonces", "mira", "oye", "fíjate", "imagínate", "entiéndeme",
+        "osea", "ósea", "tipo", "nada", "vamos", "venga", "hombre", "mujer",
+        "chaval", "chavala", "tío", "tía", "wey", "güey", "wei", "huevón",
+        "boludo", "che", "marica", "parce", "pana", "mano", "compa",
+        "onda", "rollo", "trama", "vaina", "cosa", "coso",
+        "ehhh", "estooo", "pueeees", "bueeeno", "yyyyy", "aaaa",
+        "literal", "literalmente", "básicamente", "obviamente", "realmente",
+        "actualmente", "evidentemente", "definitivamente", "totalmente",
+        # English fillers (50+)
+        "uh", "um", "er", "ah", "like", "so", "well", "right", "okay",
+        "actually", "basically", "literally", "seriously", "honestly",
+        "totally", "absolutely", "definitely", "certainly", "clearly",
+        "obviously", "evidently", "apparently", "essentially", "fundamentally",
+        "yeah", "yep", "yup", "nah", "nope", "huh", "hmm", "mhm",
+        "alright", "anyways", "anyhow", "whatever", "whatnot",
+        "kinda", "sorta", "gonna", "wanna", "gotta",
+        "umm", "uhhh", "errr", "sooo", "welll", "aaand", "orrr",
+        "quite", "rather", "fairly", "pretty", "really", "very"
     }
     
-    # Words that can be fillers but often aren't - need context
+    # Words that can be fillers but often aren't - need context checking
     contextual_fillers = {
-        "pues": ["pues bien", "pues sí", "pues no"],  # OK in these contexts
-        "entonces": ["y entonces", "pero entonces"],   # OK in narrative
-        "so": ["and so", "so that", "so far"],        # OK when logical
-        "well": ["as well", "very well", "well done"], # OK when not pause
-        "actually": ["actually happened", "actually true"], # OK when emphasizing
-        "like": ["looks like", "feels like", "seems like"], # OK in comparisons
-        "bueno": ["muy bueno", "bueno para"],         # OK as adjective
-        "claro": ["muy claro", "más claro"]           # OK as adjective
+        # Spanish contextual words
+        "pues": ["pues bien", "pues sí", "pues no", "pues claro"],
+        "entonces": ["y entonces", "pero entonces", "desde entonces"],
+        "bueno": ["muy bueno", "bueno para", "es bueno", "tan bueno"],
+        "claro": ["muy claro", "más claro", "está claro", "por supuesto"],
+        "bien": ["muy bien", "está bien", "tan bien", "qué bien"],
+        "vale": ["no vale", "vale la pena", "cuánto vale"],
+        "tipo": ["este tipo", "tipo de", "qué tipo"],
+        "cosa": ["una cosa", "la cosa", "otra cosa", "ninguna cosa"],
+        "nada": ["nada más", "de nada", "para nada", "nada que ver"],
+        # English contextual words  
+        "so": ["and so", "so that", "so far", "so much", "so many"],
+        "well": ["as well", "very well", "well done", "well known"],
+        "right": ["right now", "right here", "all right", "that's right"],
+        "like": ["looks like", "feels like", "seems like", "would like"],
+        "actually": ["actually happened", "actually true", "actually is"],
+        "just": ["just now", "just because", "just like", "just as"],
+        "really": ["really good", "really bad", "really is", "not really"],
+        "pretty": ["pretty good", "pretty bad", "pretty much", "so pretty"],
+        "quite": ["quite good", "quite right", "not quite", "quite a"]
     }
     
-    # Filter out contextual fillers that appear in valid phrases
+    # IMPROVED: Smarter contextual filtering - check frequency and valid usage patterns
     filler_words = set()
     for word in filler_words_all:
         if word in contextual_fillers:
-            # Check if word appears in invalid contexts
+            # Check if word appears mostly in valid contexts
             valid_contexts = contextual_fillers[word]
-            is_filler = True
+            total_count = lower_transcript.count(f" {word} ") + lower_transcript.count(f" {word},") + lower_transcript.count(f" {word}.")
+            
+            if total_count == 0:
+                continue  # Word not found
+            
+            valid_count = 0
             for context in valid_contexts:
-                if context in lower_transcript:
-                    # Count occurrences - if mostly in valid context, not a filler
-                    total_count = lower_transcript.count(word)
-                    valid_count = lower_transcript.count(context)
-                    if valid_count / total_count > 0.5:  # More than 50% valid usage
-                        is_filler = False
-                        break
-            if is_filler:
-                filler_words.add(word)
+                valid_count += lower_transcript.count(context)
+            
+            # If more than 60% of usage is in valid contexts, it's not a filler
+            if total_count > 0 and (valid_count / total_count) > 0.6:
+                continue  # Skip - mostly valid usage
+            else:
+                filler_words.add(word)  # Add - mostly filler usage
         else:
+            # Direct fillers without context checking
             filler_words.add(word)
     
     # EXPANDED: Hedge phrases
@@ -793,8 +828,8 @@ def generate_smart_insights(
         if overall_score >= 85:
             openings = [
                 f"Excellent work! In your {ctx_lang['name']}, ",
-                f"Impressive! Your {ctx_lang['name']} shows ",
-                f"Great job! You mastered your {ctx_lang['name']} with "
+                f"Impressive! Your {ctx_lang['name']} demonstrates ",
+                f"Outstanding! You've mastered your {ctx_lang['name']} with "
             ]
         elif overall_score >= 70:
             openings = [
@@ -805,92 +840,248 @@ def generate_smart_insights(
         else:
             openings = [
                 f"Room for improvement in your {ctx_lang['name']}. ",
-                f"Let's practice your {ctx_lang['name']} more. ",
-                f"With practice you'll improve your {ctx_lang['name']}. "
+                f"Let's work on your {ctx_lang['name']} together. ",
+                f"With practice, you'll improve your {ctx_lang['name']}. "
             ]
         
         import random
         summary = random.choice(openings)
         
-        # Rest of English version follows same detailed pattern...
-        # (I'll keep this shorter to save tokens, but it's the same structure)
-        
+        # DETAILED pace analysis with specific advice
         pace_diff = pace - ((min_pace + max_pace) / 2)
         if pace < min_pace - 20:
-            summary += f"Your pace of {pace} wpm is very slow. This may lose audience attention. "
-            summary += f"Ideal range for {ctx_lang['name']} is {min_pace}-{max_pace} wpm. "
+            summary += f"Your pace of {pace} wpm is very slow. This can cause your audience to lose attention. "
+            summary += f"The ideal range for {ctx_lang['name']} is {min_pace}-{max_pace} wpm. "
+            summary += "Tip: Practice reading aloud with a metronome to naturally increase speed. "
         elif pace < min_pace:
-            summary += f"Your pace of {pace} wpm is slow ({abs(pace_diff):.0f} wpm below ideal). "
+            summary += f"Your pace of {pace} wpm is measured ({abs(pace_diff):.0f} wpm below ideal). "
+            summary += "This can be good for clarity, but you might lose momentum. "
         elif pace > max_pace + 20:
-            summary += f"Your pace of {pace} wpm is very fast. Your audience may struggle to process. "
+            summary += f"Your pace of {pace} wpm is very fast. Your audience may have difficulty processing. "
+            summary += f"Try to reduce to {min_pace}-{max_pace} wpm. "
+            summary += "Tip: Pause for 2-3 seconds after each key point. "
         elif pace > max_pace:
             summary += f"Your pace of {pace} wpm is slightly fast (+{pace_diff:.0f} wpm above ideal). "
+            summary += "This adds energy, but be careful not to rush through critical moments. "
         else:
-            summary += f"Your pace of {pace} wpm is perfect for this context. "
+            summary += f"Your pace of {pace} wpm is perfect for this context. You're in the ideal range of {min_pace}-{max_pace} wpm. "
+        
+        # DETAILED disfluency analysis with varied phrasing
+        disfluency_comments = {
+            "very_high": [
+                f"We detected {disfluencies:.1f} disfluencies per minute (more than double the ideal limit of {max_disf}). This can significantly weaken your message.",
+                f"High level of fillers: {disfluencies:.1f}/min when the ideal is max {max_disf}. Each 'um' or 'like' reduces the impact of your ideas.",
+                f"Disfluencies ({disfluencies:.1f}/min) are affecting your credibility. The recommended threshold is {max_disf}/min for {ctx_lang['name']}."
+            ],
+            "high": [
+                f"You have {disfluencies:.1f} disfluencies/min (ideal is max {max_disf}). They're manageable, but each filler reduces credibility.",
+                f"We detected {disfluencies:.1f} fillers per minute. It's above the ideal ({max_disf}/min) but with practice you'll improve.",
+                f"Moderate-high level of disfluencies: {disfluencies:.1f}/min. Reducing to {max_disf}/min will noticeably improve your professionalism."
+            ],
+            "low": [
+                f"Excellent disfluency control: only {disfluencies:.1f} per minute. Very few 'ums' and 'likes'!",
+                f"Outstanding fluency with barely {disfluencies:.1f} fillers/min. Your message sounds polished and reliable.",
+                f"Impressive control: {disfluencies:.1f} disfluencies/min (ideal: <{max_disf}). Your speech flows naturally."
+            ],
+            "perfect": [
+                "Perfect fluency! Zero detectable disfluencies. You spoke like a seasoned professional.",
+                "Flawless! We didn't detect a single filler. Your message was crystal clear.",
+                "Expert-level fluency: 0 disfluencies. Every word had purpose and intention."
+            ]
+        }
         
         if disfluencies > max_disf * 2:
-            summary += f"We detected {disfluencies:.1f} disfluencies per minute (over 2x the ideal limit of {max_disf}). "
+            summary += random.choice(disfluency_comments["very_high"]) + " "
         elif disfluencies > max_disf:
-            summary += f"You have {disfluencies:.1f} disfluencies/min (ideal is max {max_disf}). "
+            summary += random.choice(disfluency_comments["high"]) + " "
         elif disfluencies > 0:
-            summary += f"Excellent disfluency control: only {disfluencies:.1f} per minute. "
+            summary += random.choice(disfluency_comments["low"]) + " "
         else:
-            summary += "Perfect fluency! Zero detectable disfluencies. "
+            summary += random.choice(disfluency_comments["perfect"]) + " "
+        
+        # DETAILED pitch analysis with varied phrasing
+        pitch_comments = {
+            "very_low": [
+                f"Your pitch variation ({pitch:.1f}) is very monotone. This is critical in {ctx_lang['name']} where {ctx_lang['focus']}. Your voice sounds flat.",
+                f"Monotone detected ({pitch:.1f}). In {ctx_lang['name']}, lack of vocal variation can make people lose interest quickly.",
+                f"Your voice lacks dynamism ({pitch:.1f} variation). For {ctx_lang['name']}, you need to modulate your tone more to maintain engagement."
+            ],
+            "low": [
+                f"Your tone needs more dynamism (currently {pitch:.1f}, ideal {ideal_pitch_min}+). In {ctx_lang['name']}, {ctx_lang['key_moments'][0]} requires vocal variation.",
+                f"Limited pitch variation ({pitch:.1f}). Raise the range to {ideal_pitch_min}+ to give {ctx_lang['name']} more life.",
+                f"Your vocal modulation ({pitch:.1f}) can improve. The range {ideal_pitch_min}-{ideal_pitch_max} is optimal for {ctx_lang['name']}."
+            ],
+            "high": [
+                f"Excellent pitch variation ({pitch:.1f})! You maintain attention naturally.",
+                f"Outstanding vocal modulation ({pitch:.1f}). Your voice has dynamism and keeps the listener interested.",
+                f"Impressive pitch variation ({pitch:.1f}). You use your voice as an instrument to emphasize key ideas."
+            ],
+            "good": [
+                f"Good pitch variation ({pitch:.1f}). You have an adequate vocal range for {ctx_lang['name']}.",
+                f"Solid vocal modulation ({pitch:.1f}). Your tone varies enough to maintain interest.",
+                f"Appropriate pitch range ({pitch:.1f}). You avoid monotony without overdoing it."
+            ]
+        }
         
         if pitch < 10:
-            summary += f"Your pitch variation ({pitch:.1f}) is very monotone. "
+            summary += random.choice(pitch_comments["very_low"]) + " "
         elif pitch < ideal_pitch_min:
-            summary += f"Your tone needs more dynamism (currently {pitch:.1f}, ideal {ideal_pitch_min}+). "
+            summary += random.choice(pitch_comments["low"]) + " "
         elif pitch > ideal_pitch_max:
-            summary += f"Excellent pitch variation ({pitch:.1f})! "
+            summary += random.choice(pitch_comments["high"]) + " "
         else:
-            summary += f"Good pitch variation ({pitch:.1f}). "
+            summary += random.choice(pitch_comments["good"]) + " "
         
+        # Add comparison with previous if available
+        if previous_recording:
+            summary += "\n\nComparison with your last practice: "
+            prev_pace = previous_recording.get('pace', 0)
+            prev_disf = previous_recording.get('disfluencies_per_minute', 0)
+            prev_pitch = previous_recording.get('pitch_variation', 0)
+            
+            if abs(pace - prev_pace) > 10:
+                trend = "increased" if pace > prev_pace else "decreased"
+                summary += f"Your pace {trend} {abs(pace - prev_pace):.0f} wpm. "
+            
+            if prev_disf > 0 and disfluencies < prev_disf:
+                improvement = ((prev_disf - disfluencies) / prev_disf) * 100
+                summary += f"You reduced disfluencies by {improvement:.0f}%! "
+            elif disfluencies > prev_disf:
+                summary += f"Disfluencies increased (+{disfluencies - prev_disf:.1f}/min). "
+        
+        # SPECIFIC, ACTIONABLE steps based on weaknesses with variety
         actions = []
         
+        # Pace-specific actions with multiple options
+        pace_actions = {
+            "very_slow": [
+                f"URGENT: Speed up. Record 1 minute today, listen to it, then re-record 10% faster. Repeat until {min_pace} wpm.",
+                f"Metronome exercise: Speak following 120 bpm, then 130, then 140. Find your ideal rhythm at {min_pace}-{max_pace} wpm.",
+                f"Read news articles aloud for 2 minutes. Goal: finish the entire article. This will force you to naturally speed up."
+            ],
+            "slow": [
+                f"Gradually accelerate: Each day, speak 5 wpm faster. In 1 week you'll be at {min_pace} wpm.",
+                f"Stopwatch technique: Explain a concept in 60 seconds (today), then in 50 seconds (tomorrow), then in 45 seconds.",
+                f"Record one minute at {pace} wpm, another at {min_pace} wpm. Listen to the difference. Practice the second rhythm."
+            ],
+            "fast": [
+                f"Reduce speed: Pause for 1-2 seconds after each important phrase. Count mentally.",
+                f"Breathing technique: Take a deep breath every 3 sentences. This forces you to pause and naturally reduces pace.",
+                f"Record 2 minutes. Mark with 'X' each moment you should have paused. Re-record adding those pauses."
+            ],
+            "very_fast": [
+                f"URGENT: Strategic pausing. After each key point, 3 seconds of silence. Your audience needs time to process.",
+                f"Reverse stutter exercise: Speak ex-treme-ly slow-ly for 30s. Then normal speed. You'll notice the difference.",
+                f"Divide your message into 'chunks' of 10 words. Pause 2 seconds between chunks. Gradually reduce to {max_pace} wpm."
+            ]
+        }
+        
         if pace < min_pace - 20:
-            actions.append(f"URGENT: Speed up your pace. Practice reading a 75-word paragraph in 30 seconds.")
+            actions.append(random.choice(pace_actions["very_slow"]))
         elif pace < min_pace:
-            actions.append(f"Gradually accelerate: Record 1 minute today at current pace, tomorrow try 5 wpm faster until {min_pace} wpm.")
+            actions.append(random.choice(pace_actions["slow"]))
+        elif pace > max_pace + 20:
+            actions.append(random.choice(pace_actions["very_fast"]))
+        elif pace > max_pace:
+            actions.append(random.choice(pace_actions["fast"]))
+        
+        # Disfluency-specific actions with variety
+        disfluency_actions = {
+            "critical": [
+                "CRITICAL: Record 30 seconds. Listen and count your fillers. Re-record replacing each one with 1 second of silence. Repeat 5 times.",
+                "Mental censor technique: Every time you feel an 'um' or 'like' coming, bite your tongue (literally). Practice until it becomes automatic.",
+                "Extreme exercise: Record 1 minute. Each filler = 5 push-ups. You'll notice your brain learns FAST to avoid them."
+            ],
+            "high": [
+                "Identify your #1 filler. Every time you use it in conversation, stop for 3 seconds before continuing. Your brain will self-correct.",
+                "Replacement technique: Change 'um' to pause, 'like' to deep breath, 'you know' to 'specifically'. Practice actively.",
+                "Record 2 minutes without a script. Transcribe ONLY the fillers. You'll see the pattern. Next recording: reduce by 50%."
+            ],
+            "moderate": [
+                "Fine-tuning: Before recording, say aloud 'I will speak without fillers'. This activates your mental filter.",
+                "Practice 'point speaking': Complete idea → pause → next idea. Fillers live in confused transitions.",
+                "Read aloud for 2 minutes perfectly (written text has no fillers). Then improvise 2 minutes imitating that fluency."
+            ]
+        }
         
         if disfluencies > max_disf * 2:
-            actions.append("CRITICAL: Record 30 seconds, identify your top 3 fillers, replace with silence. Practice 10 times.")
+            actions.append(random.choice(disfluency_actions["critical"]))
         elif disfluencies > max_disf:
-            actions.append("Identify your #1 filler word. Each time you use it, stop and rephrase without it.")
+            actions.append(random.choice(disfluency_actions["high"]))
+        elif disfluencies > max_disf * 0.5:
+            actions.append(random.choice(disfluency_actions["moderate"]))
+        
+        # Pitch-specific actions with variety
+        pitch_actions = {
+            "critical": [
+                f"CRITICAL for {ctx_lang['name']}: Exaggerate your tone to the max (like a movie narrator). Then reduce 50%. That's your target.",
+                "Imitation technique: Listen to [Steve Jobs/Obama/your favorite speaker]. Copy their modulation in 1 minute of practice.",
+                "Vocal exercise: Repeat the same phrase 5 times: whispering, normal, emphatic, questioning, exclaiming. Notice the difference."
+            ],
+            "needs_work": [
+                "Improve dynamics: Mark 3 key words in your script. Raise pitch 30% ONLY on those words. The contrast generates interest.",
+                "'Up-down' technique: First sentence high pitch, second low, third medium. Vary constantly.",
+                "Record and visualize: Use an app that shows your pitch. It should look like a rollercoaster, not a flat line."
+            ],
+            "good": [
+                "Refinement: Your tone is good, now make it strategic. Lower pitch at end of statements. Raise on rhetorical questions.",
+                f"Contextual matching: In {ctx_lang['key_moments'][0]}, emphasize with high pitch. In {ctx_lang['key_moments'][1]}, keep it low and firm.",
+                "Practice emotions: Record explaining something happy, then sad, then urgent. Notice how your pitch follows emotion automatically."
+            ]
+        }
         
         if pitch < 10:
-            actions.append(f"CRITICAL for {ctx_lang['name']}: Exaggerate your tone. Read as if to a 5-year-old, then reduce 50%.")
+            actions.append(random.choice(pitch_actions["critical"]))
+        elif pitch < ideal_pitch_min:
+            actions.append(random.choice(pitch_actions["needs_work"]))
+        elif pitch >= ideal_pitch_min and pitch < ideal_pitch_max * 0.8:
+            actions.append(random.choice(pitch_actions["good"]))
         
+        # Context-specific tactical advice
         actions.append(f"Specific tactic for {ctx_lang['name']}: {ctx_lang['voice_tips'][1]}")
         
+        # Add anti-pattern warning
+        if len(ctx_lang['common_mistakes']) > 0:
+            mistake_idx = 0 if disfluencies > max_disf else (1 if pitch < ideal_pitch_min else 2)
+            if mistake_idx < len(ctx_lang['common_mistakes']):
+                actions.append(f"Warning: Avoid {ctx_lang['common_mistakes'][mistake_idx]}")
+        
+        # Generate VARIED, SPECIFIC exercises
         exercises_pool = {
             "sales_pitch": [
-                f"Record 2 minutes selling your favorite product. Goal: 0 fillers, {min_pace}-{max_pace} wpm pace, end with 'If you say YES now...' (strong emphasis on YES).",
-                f"90-second pitch: Problem (20s, worried tone) → Solution (40s, enthusiastic) → Price (20s, pause before) → Urgent close (10s, accelerated)."
+                f"Record 2 minutes selling your favorite product. Goal: 0 fillers, {min_pace}-{max_pace} wpm pace, and end with 'If you say YES now...' (strong emphasis on YES).",
+                f"90-second pitch: Problem (20s, worried tone) → Solution (40s, enthusiastic) → Price (20s, pause before stating) → Urgent close (10s, accelerated).",
+                f"Sell something ridiculous (e.g., comb for bald people) but seriously. This forces you to use convincing tone even with absurd product. 2 minutes, {min_pace} wpm minimum."
             ],
             "academic": [
                 f"Explain [concept in your field] in 3 minutes with exact structure: Definition (30s) → 3 examples (60s each) → Conclusion (30s). Pause 2 seconds between sections.",
-                f"Feynman method: Explain [complex topic] as if audience is 12 years old, without losing academic precision. 4 minutes, {min_pace} wpm pace."
+                f"Record as if explaining to your professor: introduce thesis in 20 seconds, present 3 pieces of evidence (30s each with source), conclude in 20s. Max {max_disf} fillers.",
+                f"Feynman method: Explain [complex topic] as if your audience is 12 years old, but without losing academic precision. 4 minutes, {min_pace} wpm pace."
             ],
             "interview": [
                 f"Answer 'Tell me about yourself' with structure: Past (30s) → Present (30s) → Future/Why this company (30s). Total 90s, zero fillers, confident tone.",
-                f"Practice STAR response to 'Tell me about an achievement': Situation (15s) → Task (15s) → Action (45s with details) → Quantifiable Result (15s)."
+                f"Practice STAR response to 'Tell me about an achievement': Situation (15s) → Task (15s) → Action (45s with details) → Quantifiable Result (15s). Pause 1s before result.",
+                f"Tricky question: 'What's your biggest weakness'. Answer in 60s turning weakness into learning. Honest but confident tone, max 2 fillers."
             ],
             "public_speech": [
                 f"2-minute speech on topic you're passionate about. Must include: Emotional hook (dramatic pause after), 3 main points (tone change in each), call to action (accelerate at end).",
-                f"'Whisper-Shout' technique: Tell story in 90s. Start whispering (intimacy), gradually increase volume, climax loudly, end medium tone. Vary pace with tension."
+                f"'Whisper-Shout' technique: Tell story in 90s. Start whispering (intimacy), gradually increase volume, climax loudly, end medium tone. Vary pace with tension.",
+                f"Practice MLK Jr style: 'I have a dream...' Repeat the phrase 3 times with different emphasis each time. Notice how repetition + variation = power. Apply to your message."
             ],
             "storytelling": [
-                f"Tell personal story in 3 minutes: Slow setup ({min_pace} wpm), accelerated conflict ({max_pace} wpm), climax (dramatic pause), medium resolution. Vary tone with emotion.",
-                f"Pixar technique: Once upon a time [character]... Every day [routine]... Until one day [conflict]... Because of that [actions]... Until finally [resolution]. 3 min, change pace at 'Until one day'."
+                f"Tell personal story in 3 minutes: Slow setup ({min_pace} wpm), accelerated conflict ({max_pace} wpm), climax (dramatic pause before), medium resolution. Vary tone with emotion.",
+                f"Pixar technique: Once upon a time [character]... Every day [routine]... Until one day [conflict]... Because of that [actions]... Until finally [resolution]. 3 min, change pace at 'Until one day'.",
+                f"Narrate like a movie: Part 1 descriptive and slow, Part 2 fast-paced action, Part 3 reflective conclusion. Practice switching between these 3 'modes' fluidly."
             ],
             "general": [
-                f"Record 2 minutes explaining your day. Goal: conversational but clear, {min_pace}-{max_pace} wpm, max {max_disf} fillers, end with reflection (not 'that's it').",
-                f"'Elevator Pitch' of yourself: 60 seconds explaining who you are, what you do, why it's interesting. Should sound natural, not memorized. {(min_pace+max_pace)//2} wpm pace."
+                f"Record 2 minutes explaining your day. Goal: conversational but clear, {min_pace}-{max_pace} wpm, max {max_disf} fillers, and end with reflection (not 'that's it').",
+                f"'Elevator Pitch' of yourself: 60 seconds where you explain who you are, what you do, and why it's interesting. Should sound natural, not memorized. {(min_pace+max_pace)//2} wpm pace.",
+                f"Read a book paragraph, then explain it in your words (without looking). Compare your pace vs the original. Goal: maintain clarity but with your natural style."
             ]
         }
         
         exercise_list = exercises_pool.get(context, exercises_pool["general"])
+        # Rotate exercises based on user's history
         exercise_index = hash(str(metrics)) % len(exercise_list)
         exercise = exercise_list[exercise_index]
     
@@ -1237,6 +1428,32 @@ async def insights(
         language,
         payload.context
     )
+
+@app.post("/confirm-subscription")
+async def confirm_subscription(
+    payload: dict,
+    user: dict = Depends(get_current_user)
+):
+    subscription_id = payload.get("subscriptionID")
+    user_email = user.get("email")
+    print(f"Confirmando suscripción {subscription_id} para el usuario {user_email}")
+    
+    # Update user tier and store subscription ID
+    supabase.table("users").update({
+        "tier": "pro",
+        "subscription_id": subscription_id,
+        "subscription_status": "active"
+    }).eq("email", user_email).execute()
+    
+    # Log subscription activation
+    supabase.table("payments").insert({
+        "order_id": subscription_id,
+        "user_email": user_email,
+        "timestamp": int(time.time()),
+        "event": "subscription_activated"
+    }).execute()
+    
+    return {"status": "success", "message": "La suscripción ha sido activada."}
 
 @app.post("/confirm-payment")
 async def confirm_payment(

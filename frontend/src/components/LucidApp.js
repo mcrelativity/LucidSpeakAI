@@ -265,7 +265,11 @@ const LucidApp = ({ locale = 'es' }) => {
                                         <div className="flex justify-between items-start mb-3">
                                             <div className="flex-1">
                                                 <h3 className="font-bold text-sky-400 text-xl mb-2 flex items-center gap-2">
-                                                    <span>🎯</span>
+                                                    <span className="w-5 h-5 flex items-center justify-center bg-sky-500/20 rounded border border-sky-500/40">
+                                                        <svg className="w-3 h-3 text-sky-400" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                                                        </svg>
+                                                    </span>
                                                     {session.name}
                                                 </h3>
                                                 <div className="flex flex-wrap items-center gap-2">
@@ -297,18 +301,24 @@ const LucidApp = ({ locale = 'es' }) => {
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                                 onClick={() => selectExistingSession(session.id)}
-                                                className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-all duration-300 hover:shadow-md shadow-sky-500/30"
+                                                className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-all duration-300 hover:shadow-md shadow-sky-500/30 flex items-center justify-center gap-2"
                                             >
-                                                🎙️ Grabar Nueva
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                                                </svg>
+                                                Grabar Nueva
                                             </motion.button>
                                             {session.recordings_count > 0 && (
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={() => viewSessionDetails(session.id)}
-                                                    className="flex-1 bg-slate-700/70 hover:bg-slate-600/70 border border-slate-600 hover:border-slate-500 text-white text-sm font-semibold py-2.5 rounded-lg transition-all duration-300 backdrop-blur-sm"
+                                                    className="flex-1 bg-slate-700/70 hover:bg-slate-600/70 border border-slate-600 hover:border-slate-500 text-white text-sm font-semibold py-2.5 rounded-lg transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-2"
                                                 >
-                                                    📊 Ver Historial
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                                                    </svg>
+                                                    Ver Historial
                                                 </motion.button>
                                             )}
                                         </div>
@@ -328,9 +338,11 @@ const LucidApp = ({ locale = 'es' }) => {
                                         scale: [1, 1.1, 1]
                                     }}
                                     transition={{ duration: 3, repeat: Infinity }}
-                                    className="text-6xl mb-4"
+                                    className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-sky-500/10 border-2 border-sky-500/30 rounded-full"
                                 >
-                                    🎯
+                                    <svg className="w-10 h-10 text-sky-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                                    </svg>
                                 </motion.div>
                                 <h3 className="text-xl font-bold text-slate-300 mb-2">
                                     Comienza tu viaje de mejora
