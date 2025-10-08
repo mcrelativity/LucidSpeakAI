@@ -41,11 +41,14 @@ app = FastAPI()
 # ==============================================================================
 # SUPABASE CONFIGURATION
 # ==============================================================================
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://knssphhltgwbnkbvriqu.supabase.co")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")  # Use service_role for backend
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtuc3NwaGhsdGd3Ym5rYnZyaXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODIzMjIsImV4cCI6MjA3NTM1ODMyMn0.iY_qtt3jdUyL8wVgt2B3xowcUyXErwJpTxl-63dSd9M")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
 # Use service_role key for backend operations (bypasses RLS)
+if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in environment variables")
+
 supabase: Client = create_client(
     SUPABASE_URL,
     SUPABASE_SERVICE_KEY or SUPABASE_ANON_KEY
@@ -73,7 +76,9 @@ app.add_middleware(
 # ==============================================================================
 # SEGURIDAD Y AUTENTICACIÓN
 # ==============================================================================
-SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY must be set in environment variables for production use")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 days
 
