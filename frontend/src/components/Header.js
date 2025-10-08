@@ -41,7 +41,7 @@ const Header = () => {
 
     return (
         <header className="w-full max-w-5xl p-4 flex justify-between items-center text-white mb-8">
-            <Link href={user ? "/dashboard" : "/welcome"} className="text-2xl font-bold text-sky-400 z-30">LucidSpeak</Link>
+            <Link href="/welcome" className="text-2xl font-bold text-sky-400 z-30">LucidSpeak</Link>
             
             <nav className="hidden md:flex items-center space-x-6 text-slate-300">
                 <Link href="/pricing" className="hover:text-sky-400">{t('Header.prices')}</Link>
