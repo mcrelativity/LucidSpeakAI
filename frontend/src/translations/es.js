@@ -38,7 +38,14 @@ const es = {
     session: "Sesión",
     pace: "Ritmo",
     tone: "Tono",
-    disfluencies: "Disfluencias"
+    disfluencies: "Disfluencias",
+    emptyStateTitle: "Comienza tu viaje de mejora",
+    emptyStateMessage: "No tienes sesiones aún. Crea tu primera sesión para comenzar a practicar y mejorar tus habilidades de comunicación.",
+    createFirstSession: "Crear Primera Sesión",
+    recordNew: "Grabar Nueva",
+    viewHistory: "Ver Historial",
+    recordingsCount: "grabación",
+    recordingsCountPlural: "grabaciones"
   },
   ReadyToRecord: {
     title: "Nueva Sesión",
@@ -218,7 +225,15 @@ const es = {
     save: "Guardar",
     delete: "Eliminar",
     edit: "Editar",
-    close: "Cerrar"
+    close: "Cerrar",
+    contexts: {
+      general: "General",
+      sales_pitch: "Pitch de Ventas",
+      academic: "Académica",
+      interview: "Entrevista",
+      public_speech: "Discurso Público",
+      storytelling: "Narrativa"
+    }
   }
 };
 

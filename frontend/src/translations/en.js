@@ -38,7 +38,14 @@ const en = {
     session: "Session",
     pace: "Pace",
     tone: "Tone",
-    disfluencies: "Disfluencies"
+    disfluencies: "Disfluencies",
+    emptyStateTitle: "Start your improvement journey",
+    emptyStateMessage: "You don't have any sessions yet. Create your first session to start practicing and improving your communication skills.",
+    createFirstSession: "Create First Session",
+    recordNew: "Record New",
+    viewHistory: "View History",
+    recordingsCount: "recording",
+    recordingsCountPlural: "recordings"
   },
   ReadyToRecord: {
     title: "New Session",
@@ -218,7 +225,15 @@ const en = {
     save: "Save",
     delete: "Delete",
     edit: "Edit",
-    close: "Close"
+    close: "Close",
+    contexts: {
+      general: "General",
+      sales_pitch: "Sales Pitch",
+      academic: "Academic",
+      interview: "Interview",
+      public_speech: "Public Speech",
+      storytelling: "Storytelling"
+    }
   }
 };
 

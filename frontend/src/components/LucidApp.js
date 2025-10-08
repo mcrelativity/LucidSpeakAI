@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import RecordingUI from './RecordingUI';
 import AnalyzingUI from './AnalyzingUI';
 import ResultsUI from './ResultsUI';
@@ -19,6 +20,8 @@ const LucidApp = ({ locale = 'es' }) => {
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedSessionForDetails, setSelectedSessionForDetails] = useState(null);
     const { token, apiBase } = useAuth();
+    const t = useTranslations('Dashboard');
+    const tCommon = useTranslations('Common');
 
     useEffect(() => {
         if (token) {
@@ -139,15 +142,6 @@ const LucidApp = ({ locale = 'es' }) => {
         } catch (error) {
             console.error("Error loading session details:", error);
         }
-    };
-
-    const contextLabels = {
-        general: "General",
-        sales_pitch: "Pitch de Ventas",
-        academic: "Académica",
-        interview: "Entrevista",
-        public_speech: "Discurso Público",
-        storytelling: "Narrativa"
     };
 
     return (
@@ -274,7 +268,7 @@ const LucidApp = ({ locale = 'es' }) => {
                                                 </h3>
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span className="text-xs bg-slate-700/70 border border-slate-600 px-3 py-1 rounded-full text-slate-300 font-medium backdrop-blur-sm">
-                                                        {contextLabels[session.context] || session.context}
+                                                        {tCommon(`contexts.${session.context}`) || session.context}
                                                     </span>
                                                     <span className="text-xs text-slate-500 flex items-center gap-1">
                                                         <motion.span 
@@ -282,7 +276,7 @@ const LucidApp = ({ locale = 'es' }) => {
                                                             transition={{ duration: 2, repeat: Infinity }}
                                                             className="w-2 h-2 bg-sky-400 rounded-full"
                                                         />
-                                                        {session.recordings_count} grabación{session.recordings_count !== 1 ? 'es' : ''}
+                                                        {session.recordings_count} {session.recordings_count !== 1 ? t('recordingsCountPlural') : t('recordingsCount')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -306,7 +300,7 @@ const LucidApp = ({ locale = 'es' }) => {
                                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
                                                 </svg>
-                                                Grabar Nueva
+                                                {t('recordNew')}
                                             </motion.button>
                                             {session.recordings_count > 0 && (
                                                 <motion.button
@@ -318,7 +312,7 @@ const LucidApp = ({ locale = 'es' }) => {
                                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                         <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                                                     </svg>
-                                                    Ver Historial
+                                                    {t('viewHistory')}
                                                 </motion.button>
                                             )}
                                         </div>
@@ -345,10 +339,10 @@ const LucidApp = ({ locale = 'es' }) => {
                                     </svg>
                                 </motion.div>
                                 <h3 className="text-xl font-bold text-slate-300 mb-2">
-                                    Comienza tu viaje de mejora
+                                    {t('emptyStateTitle')}
                                 </h3>
                                 <p className="text-slate-500 mb-6 max-w-md mx-auto">
-                                    No tienes sesiones aún. Crea tu primera sesión para comenzar a practicar y mejorar tus habilidades de comunicación.
+                                    {t('emptyStateMessage')}
                                 </p>
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
@@ -357,7 +351,7 @@ const LucidApp = ({ locale = 'es' }) => {
                                     className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2 shadow-lg shadow-sky-500/30"
                                 >
                                     <span>+</span>
-                                    <span>Crear Primera Sesión</span>
+                                    <span>{t('createFirstSession')}</span>
                                 </motion.button>
                             </motion.div>
                         )}
