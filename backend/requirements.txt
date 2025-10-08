@@ -1,0 +1,23 @@
+# FastAPI and dependencies
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.19
+
+# Database
+supabase==2.10.0
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Audio processing
+librosa==0.10.2
+soundfile==0.12.1
+numpy==1.26.4
+scipy==1.14.1
+
+# Google Cloud Speech (optional)
+google-cloud-speech==2.27.0
+
+# Environment management
+python-dotenv==1.0.1
