@@ -276,8 +276,10 @@ const es = {
     cancelled: "Cancelado",
     subscriptionId: "ID de Suscripción",
     nextBillingDate: "Próxima Facturación",
+    subscriptionEndsOn: "La suscripción finaliza el",
     manageSubscription: "Gestionar Suscripción",
     cancelSubscription: "Cancelar Suscripción",
+    reactivateSubscription: "Reactivar Suscripción",
     upgradeButton: "Mejorar a Pro",
     logout: "Cerrar Sesión",
     cancelConfirmTitle: "¿Cancelar suscripción?",
@@ -286,7 +288,11 @@ const es = {
     cancelKeepButton: "No, Mantener",
     cancelSuccess: "Suscripción cancelada exitosamente",
     cancelError: "Error al cancelar la suscripción. Por favor intenta de nuevo.",
-    cancelling: "Cancelando..."
+    cancelling: "Cancelando...",
+    reactivateSuccess: "Suscripción reactivada exitosamente",
+    reactivateError: "Error al reactivar la suscripción. Por favor intenta de nuevo.",
+    reactivating: "Reactivando...",
+    cancelledNotice: "Tu suscripción ha sido cancelada pero seguirás teniendo acceso a las funciones Pro hasta la fecha de finalización."
   }
 };
 

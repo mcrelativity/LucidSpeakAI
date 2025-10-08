@@ -276,8 +276,10 @@ const en = {
     cancelled: "Cancelled",
     subscriptionId: "Subscription ID",
     nextBillingDate: "Next Billing Date",
+    subscriptionEndsOn: "Subscription ends on",
     manageSubscription: "Manage Subscription",
     cancelSubscription: "Cancel Subscription",
+    reactivateSubscription: "Reactivate Subscription",
     upgradeButton: "Upgrade to Pro",
     logout: "Log Out",
     cancelConfirmTitle: "Cancel subscription?",
@@ -286,7 +288,11 @@ const en = {
     cancelKeepButton: "No, Keep",
     cancelSuccess: "Subscription cancelled successfully",
     cancelError: "Error cancelling subscription. Please try again.",
-    cancelling: "Cancelling..."
+    cancelling: "Cancelling...",
+    reactivateSuccess: "Subscription reactivated successfully",
+    reactivateError: "Error reactivating subscription. Please try again.",
+    reactivating: "Reactivating...",
+    cancelledNotice: "Your subscription has been cancelled but you will continue to have access to Pro features until the end date."
   }
 };
 

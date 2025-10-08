@@ -1504,6 +1504,32 @@ async def cancel_subscription(
     
     return {"status": "success", "message": "La suscripción ha sido cancelada."}
 
+@app.post("/reactivate-subscription")
+async def reactivate_subscription(
+    user: dict = Depends(get_current_user)
+):
+    """Reactivate a cancelled Pro subscription"""
+    user_email = user.get("email")
+    subscription_id = user.get("subscription_id")
+    
+    print(f"Reactivando suscripción {subscription_id} para el usuario {user_email}")
+    
+    # Update user tier back to pro and mark subscription as active
+    supabase.table("users").update({
+        "tier": "pro",
+        "subscription_status": "active"
+    }).eq("email", user_email).execute()
+    
+    # Log subscription reactivation
+    supabase.table("payments").insert({
+        "order_id": subscription_id or "unknown",
+        "user_email": user_email,
+        "timestamp": int(time.time()),
+        "event": "subscription_reactivated"
+    }).execute()
+    
+    return {"status": "success", "message": "La suscripción ha sido reactivada."}
+
 # ==============================================================================
 # HEALTH CHECK
 # ==============================================================================

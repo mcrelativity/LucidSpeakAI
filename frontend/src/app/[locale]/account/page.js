@@ -12,8 +12,8 @@ export default function AccountPage() {
     const pathname = usePathname();
     const t = useTranslations('Account');
     const [showCancelModal, setShowCancelModal] = useState(false);
-    const [cancelling, setCancelling] = useState(false);
-    const [cancelMessage, setCancelMessage] = useState({ type: '', text: '' });
+    const [processing, setProcessing] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
     
     // Extract locale from pathname
     const locale = pathname?.split('/')[1] || 'es';
@@ -25,8 +25,8 @@ export default function AccountPage() {
     }, [user, loading, router, locale]);
 
     const handleCancelSubscription = async () => {
-        setCancelling(true);
-        setCancelMessage({ type: '', text: '' });
+        setProcessing(true);
+        setMessage({ type: '', text: '' });
 
         try {
             const response = await fetch(`${apiBase}/cancel-subscription`, {
@@ -41,7 +41,7 @@ export default function AccountPage() {
                 throw new Error('Failed to cancel subscription');
             }
 
-            setCancelMessage({ type: 'success', text: t('cancelSuccess') });
+            setMessage({ type: 'success', text: t('cancelSuccess') });
             setShowCancelModal(false);
             
             // Reload page to update user data
@@ -51,10 +51,61 @@ export default function AccountPage() {
 
         } catch (error) {
             console.error('Error cancelling subscription:', error);
-            setCancelMessage({ type: 'error', text: t('cancelError') });
+            setMessage({ type: 'error', text: t('cancelError') });
         } finally {
-            setCancelling(false);
+            setProcessing(false);
         }
+    };
+
+    const handleReactivateSubscription = async () => {
+        setProcessing(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            const response = await fetch(`${apiBase}/reactivate-subscription`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to reactivate subscription');
+            }
+
+            setMessage({ type: 'success', text: t('reactivateSuccess') });
+            
+            // Reload page to update user data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error reactivating subscription:', error);
+            setMessage({ type: 'error', text: t('reactivateError') });
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    // Format date for display
+    const formatDate = (timestamp) => {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    // Calculate next billing date (30 days from subscription start or last billing)
+    const getNextBillingDate = () => {
+        if (!user.subscription_start_date) return null;
+        const nextBilling = new Date((user.subscription_start_date * 1000));
+        nextBilling.setDate(nextBilling.getDate() + 30);
+        return Math.floor(nextBilling.getTime() / 1000);
     };
 
     if (loading) {
@@ -131,22 +182,54 @@ export default function AccountPage() {
                                     {isActive ? t('active') : t('cancelled')}
                                 </span>
                             </div>
+
+                            {/* Show next billing date if active, or end date if cancelled */}
+                            {isActive && getNextBillingDate() && (
+                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+                                    <span className="font-bold text-slate-400">{t('nextBillingDate')}:</span>
+                                    <span className="text-white">{formatDate(getNextBillingDate())}</span>
+                                </div>
+                            )}
+
+                            {!isActive && user.subscription_end_date && (
+                                <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+                                    <span className="font-bold text-slate-400">{t('subscriptionEndsOn')}:</span>
+                                    <span className="text-yellow-400 font-semibold">{formatDate(user.subscription_end_date)}</span>
+                                </div>
+                            )}
                         </div>
 
-                        {isActive && (
-                            <div className="mt-6">
-                                <button
-                                    onClick={() => setShowCancelModal(true)}
-                                    className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-                                >
-                                    {t('cancelSubscription')}
-                                </button>
+                        {/* Cancelled subscription notice */}
+                        {!isActive && (
+                            <div className="mt-4 p-4 bg-yellow-600/20 border border-yellow-500 rounded-lg">
+                                <p className="text-yellow-300 text-sm">{t('cancelledNotice')}</p>
                             </div>
                         )}
 
-                        {cancelMessage.text && (
-                            <div className={`mt-4 p-4 rounded-lg ${cancelMessage.type === 'success' ? 'bg-green-600/20 border border-green-500 text-green-400' : 'bg-red-600/20 border border-red-500 text-red-400'}`}>
-                                {cancelMessage.text}
+                        {/* Action buttons */}
+                        <div className="mt-6">
+                            {isActive ? (
+                                <button
+                                    onClick={() => setShowCancelModal(true)}
+                                    disabled={processing}
+                                    className="w-full bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                >
+                                    {processing ? t('cancelling') : t('cancelSubscription')}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleReactivateSubscription}
+                                    disabled={processing}
+                                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                >
+                                    {processing ? t('reactivating') : t('reactivateSubscription')}
+                                </button>
+                            )}
+                        </div>
+
+                        {message.text && (
+                            <div className={`mt-4 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-600/20 border border-green-500 text-green-400' : 'bg-red-600/20 border border-red-500 text-red-400'}`}>
+                                {message.text}
                             </div>
                         )}
                     </motion.div>
@@ -203,14 +286,14 @@ export default function AccountPage() {
                         <div className="flex gap-4">
                             <button
                                 onClick={handleCancelSubscription}
-                                disabled={cancelling}
+                                disabled={processing}
                                 className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                             >
-                                {cancelling ? t('cancelling') : t('cancelConfirmButton')}
+                                {processing ? t('cancelling') : t('cancelConfirmButton')}
                             </button>
                             <button
                                 onClick={() => setShowCancelModal(false)}
-                                disabled={cancelling}
+                                disabled={processing}
                                 className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                             >
                                 {t('cancelKeepButton')}
