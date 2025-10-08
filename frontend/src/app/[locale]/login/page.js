@@ -77,7 +77,7 @@ export default function LoginPage() {
                     {loading ? `${t('submit')}...` : t('submit')}
                 </button>
                 <p className="text-center text-slate-400 mt-4">
-                    {t('noAccount')} <Link href={`/${locale}/registrarse`} className="text-sky-400 hover:underline">{t('signUp')}</Link>
+                    {t('noAccount')} <Link href={`/${locale}/register`} className="text-sky-400 hover:underline">{t('signUp')}</Link>
                 </p>
             </form>
         </div>

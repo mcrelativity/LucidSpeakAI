@@ -17,23 +17,23 @@ const Header = () => {
         return null;
     }
 
-    if (pathname === '/login' || pathname === '/registrarse') {
+    if (pathname === '/login' || pathname === '/register') {
         return null;
     }
 
     const navLinks = (
     <>
-        <Link href="/precios" className="block py-2 hover:text-sky-400" onClick={() => setIsMenuOpen(false)}>{t('Header.prices')}</Link>
+        <Link href="/pricing" className="block py-2 hover:text-sky-400" onClick={() => setIsMenuOpen(false)}>{t('Header.prices')}</Link>
         {user ? (
             <>
                 <Link href="/dashboard" className="block py-2 hover:text-sky-400" onClick={() => setIsMenuOpen(false)}>{t('Header.goToApp')}</Link>
-                <Link href="/cuenta" className="block py-2 hover:text-sky-400" onClick={() => setIsMenuOpen(false)}>{t('Header.account')}</Link>
+                <Link href="/account" className="block py-2 hover:text-sky-400" onClick={() => setIsMenuOpen(false)}>{t('Header.account')}</Link>
                 <button onClick={() => { logout(); setIsMenuOpen(false); }} className="block w-full text-left py-2 text-red-400 hover:text-red-500">{t('Header.logout')}</button>
             </>
         ) : (
             <>
                 <Link href="/login" className="block py-2 hover:text-sky-400" onClick={() => setIsMenuOpen(false)}>{t('Header.login')}</Link>
-                <Link href="/registrarse" className="block py-2 mt-2 text-center bg-sky-500 px-4 rounded hover:bg-sky-600 transition-colors" onClick={() => setIsMenuOpen(false)}>{t('Header.getStarted')}</Link>
+                <Link href="/register" className="block py-2 mt-2 text-center bg-sky-500 px-4 rounded hover:bg-sky-600 transition-colors" onClick={() => setIsMenuOpen(false)}>{t('Header.getStarted')}</Link>
             </>
         )}
     </>
@@ -44,17 +44,17 @@ const Header = () => {
             <Link href="/" className="text-2xl font-bold text-sky-400 z-30">LucidSpeak</Link>
             
             <nav className="hidden md:flex items-center space-x-6 text-slate-300">
-                <Link href="/precios" className="hover:text-sky-400">{t('Header.prices')}</Link>
+                <Link href="/pricing" className="hover:text-sky-400">{t('Header.prices')}</Link>
                 {user ? (
                     <>
-                        <Link href="/cuenta" className="hover:text-sky-400">{t('Header.account')}</Link>
+                        <Link href="/account" className="hover:text-sky-400">{t('Header.account')}</Link>
                         <button onClick={logout} className="hover:text-red-500">{t('Header.logout')}</button>
                         <Link href="/dashboard" className="bg-sky-500 px-4 py-2 rounded hover:bg-sky-600 transition-colors text-white">{t('Header.goToApp')}</Link>
                     </>
                 ) : (
                     <>
                         <Link href="/login" className="hover:text-sky-400">{t('Header.login')}</Link>
-                        <Link href="/registrarse" className="bg-sky-500 px-4 py-2 rounded hover:bg-sky-600 transition-colors text-white">{t('Header.getStarted')}</Link>
+                        <Link href="/register" className="bg-sky-500 px-4 py-2 rounded hover:bg-sky-600 transition-colors text-white">{t('Header.getStarted')}</Link>
                     </>
                 )}
             </nav>

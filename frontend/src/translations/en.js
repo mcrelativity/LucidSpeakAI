@@ -203,9 +203,37 @@ const en = {
   },
   Pricing: {
     title: "Unlock Your Potential",
-    planName: "Pro Plan",
-    price: "$4.99",
-    currency: "USD",
+    subtitle: "Choose the perfect plan for your improvement journey",
+    freeTier: {
+      name: "Free",
+      price: "$0",
+      period: "Forever",
+      cta: "Current Plan",
+      features: [
+        "3 recordings per month",
+        "Basic voice analysis",
+        "Filler word detection",
+        "Pace and tone metrics",
+        "Limited history (7 days)"
+      ]
+    },
+    proTier: {
+      name: "Pro",
+      price: "$4.99",
+      period: "Per month",
+      cta: "Subscribe Now",
+      popular: "Most Popular",
+      features: [
+        "Unlimited recordings",
+        "Advanced AI analysis",
+        "Personalized insights",
+        "Context-specific exercises",
+        "Unlimited complete history",
+        "Progress comparison",
+        "Priority support",
+        "Access to new features"
+      ]
+    },
     billingPeriod: "Monthly subscription",
     cancelAnytime: "Cancel anytime",
     loginRequired: "You must log in to subscribe.",
@@ -234,6 +262,31 @@ const en = {
       public_speech: "Public Speech",
       storytelling: "Storytelling"
     }
+  },
+  Account: {
+    title: "My Account",
+    loading: "Loading...",
+    email: "Email",
+    minutesUsed: "Minutes Used",
+    plan: "Plan",
+    freePlan: "Free",
+    proPlan: "Pro",
+    subscriptionStatus: "Subscription Status",
+    active: "Active",
+    cancelled: "Cancelled",
+    subscriptionId: "Subscription ID",
+    nextBillingDate: "Next Billing Date",
+    manageSubscription: "Manage Subscription",
+    cancelSubscription: "Cancel Subscription",
+    upgradeButton: "Upgrade to Pro",
+    logout: "Log Out",
+    cancelConfirmTitle: "Cancel subscription?",
+    cancelConfirmMessage: "Are you sure you want to cancel your Pro subscription? You will lose access to premium features at the end of your current billing period.",
+    cancelConfirmButton: "Yes, Cancel",
+    cancelKeepButton: "No, Keep",
+    cancelSuccess: "Subscription cancelled successfully",
+    cancelError: "Error cancelling subscription. Please try again.",
+    cancelling: "Cancelling..."
   }
 };
 

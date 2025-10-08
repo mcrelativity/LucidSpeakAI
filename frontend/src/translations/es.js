@@ -203,9 +203,37 @@ const es = {
   },
   Pricing: {
     title: "Desbloquea tu Potencial",
-    planName: "Plan Pro",
-    price: "$4.99",
-    currency: "USD",
+    subtitle: "Elige el plan perfecto para tu viaje de mejora",
+    freeTier: {
+      name: "Gratis",
+      price: "$0",
+      period: "Por siempre",
+      cta: "Plan Actual",
+      features: [
+        "3 grabaciones por mes",
+        "Análisis básico de voz",
+        "Detección de muletillas",
+        "Métricas de ritmo y tono",
+        "Historial limitado (7 días)"
+      ]
+    },
+    proTier: {
+      name: "Pro",
+      price: "$4.99",
+      period: "Por mes",
+      cta: "Suscribirse Ahora",
+      popular: "Más Popular",
+      features: [
+        "Grabaciones ilimitadas",
+        "Análisis avanzado con IA",
+        "Insights personalizados",
+        "Ejercicios específicos por contexto",
+        "Historial completo ilimitado",
+        "Comparación de progreso",
+        "Soporte prioritario",
+        "Acceso a nuevas funciones"
+      ]
+    },
     billingPeriod: "Suscripción mensual",
     cancelAnytime: "Cancela en cualquier momento",
     loginRequired: "Debes iniciar sesión para poder suscribirte.",
@@ -234,6 +262,31 @@ const es = {
       public_speech: "Discurso Público",
       storytelling: "Narrativa"
     }
+  },
+  Account: {
+    title: "Mi Cuenta",
+    loading: "Cargando...",
+    email: "Email",
+    minutesUsed: "Minutos Usados",
+    plan: "Plan",
+    freePlan: "Gratis",
+    proPlan: "Pro",
+    subscriptionStatus: "Estado de Suscripción",
+    active: "Activo",
+    cancelled: "Cancelado",
+    subscriptionId: "ID de Suscripción",
+    nextBillingDate: "Próxima Facturación",
+    manageSubscription: "Gestionar Suscripción",
+    cancelSubscription: "Cancelar Suscripción",
+    upgradeButton: "Mejorar a Pro",
+    logout: "Cerrar Sesión",
+    cancelConfirmTitle: "¿Cancelar suscripción?",
+    cancelConfirmMessage: "¿Estás seguro de que deseas cancelar tu suscripción Pro? Perderás acceso a las funciones premium al final del periodo de facturación actual.",
+    cancelConfirmButton: "Sí, Cancelar",
+    cancelKeepButton: "No, Mantener",
+    cancelSuccess: "Suscripción cancelada exitosamente",
+    cancelError: "Error al cancelar la suscripción. Por favor intenta de nuevo.",
+    cancelling: "Cancelando..."
   }
 };
 

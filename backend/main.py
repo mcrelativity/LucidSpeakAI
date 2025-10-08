@@ -1478,6 +1478,32 @@ async def confirm_payment(
     
     return {"status": "success", "message": "La cuenta ha sido actualizada a Pro."}
 
+@app.post("/cancel-subscription")
+async def cancel_subscription(
+    user: dict = Depends(get_current_user)
+):
+    """Cancel user's Pro subscription and downgrade to free tier"""
+    user_email = user.get("email")
+    subscription_id = user.get("subscription_id")
+    
+    print(f"Cancelando suscripción {subscription_id} para el usuario {user_email}")
+    
+    # Update user tier to free and mark subscription as cancelled
+    supabase.table("users").update({
+        "tier": "free",
+        "subscription_status": "cancelled"
+    }).eq("email", user_email).execute()
+    
+    # Log subscription cancellation
+    supabase.table("payments").insert({
+        "order_id": subscription_id or "unknown",
+        "user_email": user_email,
+        "timestamp": int(time.time()),
+        "event": "subscription_cancelled"
+    }).execute()
+    
+    return {"status": "success", "message": "La suscripción ha sido cancelada."}
+
 # ==============================================================================
 # HEALTH CHECK
 # ==============================================================================
