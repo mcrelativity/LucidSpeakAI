@@ -16,9 +16,15 @@ soundfile==0.12.1
 numpy==1.26.4
 scipy==1.14.1
 pydub==0.25.1
+pyaudioop==0.1.1
+audioread==3.0.1
 
-# Google Cloud Speech (optional)
+# Google Cloud Speech
 google-cloud-speech==2.27.0
+google-cloud-storage==2.18.2
 
 # Environment management
 python-dotenv==1.0.1
+
+# System dependencies note:
+# ffmpeg is required for pydub (installed via apt-get on Render)
