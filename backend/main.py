@@ -55,16 +55,42 @@ supabase: Client = create_client(
 )
 
 # ==============================================================================
+# GOOGLE CLOUD CONFIGURATION
+# ==============================================================================
+# Handle Google Cloud credentials from environment variable (for Render/production)
+GOOGLE_CREDS_JSON = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+if GOOGLE_CREDS_JSON:
+    # If JSON credentials are provided as env var, write to temp file
+    import tempfile
+    credentials_dict = json.loads(GOOGLE_CREDS_JSON)
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as f:
+        json.dump(credentials_dict, f)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f.name
+elif os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+    # Use local file path if provided (for development)
+    pass
+else:
+    print("Warning: Google Cloud credentials not configured. Speech-to-text may not work.")
+
+# ==============================================================================
 # CONSTANTES Y CONFIGURACIÓN DE CORS
 # ==============================================================================
 FREE_TIER_MINUTES = 5
 
+# Permitir orígenes locales y de producción
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
+    "https://*.vercel.app",  # Todos los dominios de Vercel
 ]
+
+# Si está en producción, agregar el dominio específico
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+if FRONTEND_URL:
+    origins.append(FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
