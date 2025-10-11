@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useState, useEffect, useContext, useMemo, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { keepAliveService } from '@/services/keepAlive';
 
 const AuthContext = createContext();
 
@@ -16,11 +17,28 @@ export const AuthProvider = ({ children }) => {
     const locale = pathname?.split('/')[1] || 'es';
     
     const apiBase = useMemo(() => {
+        // En producción, usar la variable de entorno
+        if (process.env.NEXT_PUBLIC_API_BASE) {
+            return process.env.NEXT_PUBLIC_API_BASE;
+        }
+        // En desarrollo local, construir dinámicamente
         if (typeof window !== 'undefined') {
             return `http://${window.location.hostname}:8001`;
         }
         return '';
     }, []);
+
+    // Iniciar keep-alive service cuando se monta el componente
+    useEffect(() => {
+        if (apiBase) {
+            keepAliveService.start(apiBase);
+        }
+        
+        // Cleanup al desmontar
+        return () => {
+            keepAliveService.stop();
+        };
+    }, [apiBase]);
 
     useEffect(() => {
         if (!apiBase) {

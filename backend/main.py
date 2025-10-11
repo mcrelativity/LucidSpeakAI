@@ -1548,3 +1548,12 @@ async def reactivate_subscription(
 @app.get("/")
 async def root():
     return {"message": "LucidSpeak API is running with Supabase", "version": "3.0"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint para keep-alive y monitoreo"""
+    return {
+        "status": "healthy",
+        "timestamp": int(time.time()),
+        "service": "LucidSpeak API"
+    }
