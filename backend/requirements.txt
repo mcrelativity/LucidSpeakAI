@@ -15,6 +15,7 @@ librosa==0.10.2
 soundfile==0.12.1
 numpy==1.26.4
 scipy==1.14.1
+pydub==0.25.1
 
 # Google Cloud Speech (optional)
 google-cloud-speech==2.27.0
