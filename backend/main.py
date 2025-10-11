@@ -30,13 +30,20 @@ import secrets
 import time
 import random
 from supabase import create_client, Client
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 load_dotenv()
 ffmpeg_path = os.getenv("FFMPEG_PATH")
 if ffmpeg_path and os.path.exists(ffmpeg_path):
     os.environ["PATH"] += os.pathsep + ffmpeg_path
 
+# Rate limiting
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ==============================================================================
 # SUPABASE CONFIGURATION
@@ -109,7 +116,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY must be set in environment variables for production use")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 days
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 días (mejorado de 30 para seguridad)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
@@ -152,6 +159,34 @@ class RecordingEntry(BaseModel):
 # ==============================================================================
 # FUNCIONES DE VALIDACIÓN Y SEGURIDAD
 # ==============================================================================
+import html
+
+def sanitize_input(text: str, max_length: int = 1000) -> str:
+    """Sanitiza inputs de usuario para prevenir XSS y otros ataques"""
+    if not text:
+        return ""
+    
+    # Limitar longitud
+    text = text[:max_length]
+    
+    # Escapar HTML
+    text = html.escape(text)
+    
+    # Eliminar caracteres de control peligrosos excepto espacios y newlines
+    text = ''.join(char for char in text if char.isprintable() or char in '\n\r\t ')
+    
+    return text.strip()
+
+def sanitize_email(email: str) -> str:
+    """Valida y sanitiza emails"""
+    email = email.lower().strip()
+    
+    # Regex simple de validación de email
+    if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        raise HTTPException(status_code=400, detail="Email inválido")
+    
+    return email
+
 def validate_password(password: str):
     if len(password) < 8:
         return False, "La contraseña debe tener al menos 8 caracteres."
@@ -1168,21 +1203,25 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return {"email": email, **user}
 
 @app.post("/register")
-async def register_user(form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("5/minute")  # Máximo 5 registros por minuto por IP
+async def register_user(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    # Sanitizar email
+    clean_email = sanitize_email(form_data.username)
+    
     is_valid, message = validate_password(form_data.password)
     if not is_valid: 
         raise HTTPException(status_code=400, detail=message)
     
     # Check if user exists
-    existing = supabase.table("users").select("email").eq("email", form_data.username).execute()
+    existing = supabase.table("users").select("email").eq("email", clean_email).execute()
     if existing.data:
         raise HTTPException(status_code=400, detail="El email ya está registrado")
     
     hashed_password = get_password_hash(form_data.password)
     
-    # Insert new user
+    # Insert new user con email sanitizado
     supabase.table("users").insert({
-        "email": form_data.username,
+        "email": clean_email,
         "hashed_password": hashed_password,
         "created_at": int(time.time()),
         "minutes": 0,
@@ -1192,8 +1231,12 @@ async def register_user(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"message": "Usuario creado exitosamente"}
 
 @app.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    response = supabase.table("users").select("*").eq("email", form_data.username).execute()
+@limiter.limit("10/minute")  # Máximo 10 intentos de login por minuto por IP
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    # Sanitizar email
+    clean_email = sanitize_email(form_data.username)
+    
+    response = supabase.table("users").select("*").eq("email", clean_email).execute()
     
     if not response.data:
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
@@ -1204,7 +1247,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
     
     access_token = create_access_token(
-        data={"sub": form_data.username}, 
+        data={"sub": clean_email},  # Usar email sanitizado
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     return {"access_token": access_token, "token_type": "bearer"}
@@ -1291,8 +1334,52 @@ async def get_session(
 # ==============================================================================
 # AUDIO ANALYSIS ENDPOINTS
 # ==============================================================================
+
+# Constantes de validación de archivos
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_DURATION_SECONDS = 600  # 10 minutos
+ALLOWED_AUDIO_TYPES = {
+    "audio/webm",
+    "audio/wav",
+    "audio/mp3",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/m4a",
+    "audio/x-m4a"
+}
+ALLOWED_EXTENSIONS = {".webm", ".wav", ".mp3", ".ogg", ".m4a"}
+
+def validate_audio_file(file: UploadFile, contents: bytes) -> tuple[bool, str]:
+    """Valida que el archivo sea audio válido y seguro"""
+    
+    # 1. Verificar tamaño
+    file_size = len(contents)
+    if file_size > MAX_FILE_SIZE:
+        return False, f"Archivo demasiado grande. Máximo: {MAX_FILE_SIZE / 1024 / 1024:.0f}MB"
+    
+    if file_size < 1000:  # Menos de 1KB
+        return False, "Archivo demasiado pequeño o corrupto"
+    
+    # 2. Verificar tipo MIME
+    content_type = file.content_type
+    if content_type not in ALLOWED_AUDIO_TYPES:
+        return False, f"Tipo de archivo no permitido. Permitidos: {', '.join(ALLOWED_AUDIO_TYPES)}"
+    
+    # 3. Verificar extensión
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        return False, f"Extensión no permitida. Permitidas: {', '.join(ALLOWED_EXTENSIONS)}"
+    
+    # 4. Verificar que el nombre no contenga caracteres peligrosos
+    if any(char in file.filename for char in ['..', '/', '\\', '\0']):
+        return False, "Nombre de archivo no válido"
+    
+    return True, "OK"
+
 @app.post("/upload-audio/")
+@limiter.limit("30/minute")  # Máximo 30 uploads por minuto
 async def upload_audio(
+    request: Request,
     session_id: str,
     locale: str = "es",
     file: UploadFile = File(...),
@@ -1312,18 +1399,34 @@ async def upload_audio(
 
     temp_dir = "temp_audio"
     os.makedirs(temp_dir, exist_ok=True)
-    file_path = os.path.join(temp_dir, secrets.token_hex(8) + "_" + file.filename)
+    
+    # Leer contenido del archivo
+    contents = await file.read()
+    
+    # VALIDACIÓN DE SEGURIDAD
+    is_valid, error_msg = validate_audio_file(file, contents)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
+    
+    # Generar nombre de archivo seguro
+    safe_filename = secrets.token_hex(16) + os.path.splitext(file.filename)[1].lower()
+    file_path = os.path.join(temp_dir, safe_filename)
     
     try:
-        contents = await file.read()
-        if len(contents) > 15 * 1024 * 1024:
-            raise HTTPException(status_code=413, detail="File too large")
-        
         with open(file_path, "wb") as buffer:
             buffer.write(contents)
         
         acoustic_results = analyze_acoustics(file_path)
         duration = acoustic_results.get("duration", 0)
+        
+        # Validar duración
+        if duration > MAX_DURATION_SECONDS:
+            os.remove(file_path)  # Limpiar archivo
+            raise HTTPException(
+                status_code=400,
+                detail=f"Audio demasiado largo. Máximo: {MAX_DURATION_SECONDS / 60:.0f} minutos"
+            )
+        
         transcript = ""
         
         if 1 < duration < 65:
