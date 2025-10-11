@@ -83,13 +83,15 @@ origins = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-    "https://*.vercel.app",  # Todos los dominios de Vercel
 ]
 
-# Si está en producción, agregar el dominio específico
+# Agregar dominio de producción si está configurado
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 if FRONTEND_URL:
     origins.append(FRONTEND_URL)
+else:
+    # Fallback para desarrollo
+    origins.append("https://lucid-speak-ai.vercel.app")
 
 app.add_middleware(
     CORSMiddleware,
