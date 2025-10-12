@@ -559,7 +559,7 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 <div align="center">
 
-**Made with ❤️ and 🤖 AI**
+
 
 ⭐ Star this repo if you find it useful!
 
