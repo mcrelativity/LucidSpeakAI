@@ -27,15 +27,24 @@ export default function SubscriptionSuccessPage() {
           throw new Error('Not authenticated');
         }
 
+        console.log('🔄 Confirming payment with session:', sessionId);
+
         // Call backend to confirm payment
         const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8001';
-        const response = await fetch(`${apiBase}/api/confirm-stripe-payment?session_id=${sessionId}`, {
+        const url = `${apiBase}/api/confirm-stripe-payment?session_id=${sessionId}`;
+        
+        console.log('📍 Calling:', url);
+
+        const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          }
+          },
+          body: JSON.stringify({ session_id: sessionId })
         });
+
+        console.log('📊 Response status:', response.status);
 
         const data = await response.json();
 
@@ -43,6 +52,7 @@ export default function SubscriptionSuccessPage() {
           throw new Error(data.detail || 'Failed to confirm payment');
         }
 
+        console.log('✅ Payment confirmed:', data);
         setSuccess(true);
         setLoading(false);
 
@@ -51,7 +61,9 @@ export default function SubscriptionSuccessPage() {
           router.push('/dashboard');
         }, 3000);
       } catch (err) {
-        console.error('Error confirming payment:', err);
+        console.error('❌ Error confirming payment:', err);
+        console.error('Error message:', err.message);
+        console.error('Error stack:', err.stack);
         setError(err.message);
         setLoading(false);
       }
