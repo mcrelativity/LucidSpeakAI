@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { FaTachometerAlt, FaSmile, FaBrain, FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaQuestionCircle, FaArrowUp, FaArrowDown, FaHistory, FaChartLine, FaTrophy, FaFire } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 

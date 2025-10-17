@@ -2,8 +2,10 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaStop, FaMicrophone } from 'react-icons/fa';
+import { useTranslations } from 'next-intl';
 
 const RecordingUI = ({ setAppState, setAudioBlob }) => {
+    const t = useTranslations('Recording');
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const streamRef = useRef(null);
@@ -136,10 +138,10 @@ const RecordingUI = ({ setAppState, setAudioBlob }) => {
                     </svg>
                 </motion.div>
                 <h2 className="text-2xl font-bold text-sky-400 mb-2">
-                    ¿Listo para practicar?
+                    {t('ready')}
                 </h2>
                 <p className="text-slate-400 mb-8 max-w-md">
-                    Presiona el botón para comenzar tu grabación. Habla con claridad y naturalidad.
+                    {t('instructions')}
                 </p>
                 <motion.button
                     whileHover={{ scale: 1.05 }}

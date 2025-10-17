@@ -166,7 +166,7 @@ const LucidApp = ({ locale = 'es' }) => {
                         {(authLoading || isLoadingSessions) ? (
                             <div className="flex flex-col items-center justify-center py-20">
                                 <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-16 w-16 mb-4 animate-spin border-t-sky-500"></div>
-                                <p className="text-slate-400">Cargando tus sesiones...</p>
+                                <p className="text-slate-400">{tCommon('loading')}</p>
                             </div>
                         ) : (
                             <>
@@ -178,7 +178,7 @@ const LucidApp = ({ locale = 'es' }) => {
                                         transition={{ duration: 0.5 }}
                                         className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-sky-400 via-blue-500 to-purple-500 bg-clip-text text-transparent mb-3"
                                     >
-                                        Tus Sesiones de Práctica
+                                        {t('recentSessions')}
                                     </motion.h1>
                                     <motion.p 
                                         initial={{ y: 10, opacity: 0 }}
