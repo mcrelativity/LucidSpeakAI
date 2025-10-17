@@ -107,7 +107,9 @@ origins = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-    "https://lucid-speak-ai.vercel.app",  # Dominio de producción
+    "https://intone.app",  # Nuevo dominio principal
+    "https://www.intone.app",  # Con www
+    "https://lucid-speak-ai.vercel.app",  # Dominio anterior (mantener para continuidad)
 ]
 
 # Agregar dominio de producción desde variable de entorno
