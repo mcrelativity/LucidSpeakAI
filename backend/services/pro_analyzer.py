@@ -508,12 +508,16 @@ class ProAudioAnalyzer:
     ) -> str:
         """Build the prompt for GPT analysis."""
         
+        # Build transcription part without nested f-strings
+        transcript_preview = transcript[:500]
+        transcript_extra = f"\nFull transcription: {len(transcript)} characters" if len(transcript) > 500 else ""
+        
         prompt = f"""Analyze this speech recording and provide detailed coaching feedback.
 
 CONTEXT: {context}
 
 TRANSCRIPTION:
-{transcript[:500]}...{"" if len(transcript) <= 500 else f"\n[Full transcription: {len(transcript)} characters]"}
+{transcript_preview}...{transcript_extra}
 
 AUDIO METRICS:
 - Duration: {metrics.get('duration_seconds', 0):.1f} seconds
@@ -534,11 +538,11 @@ FILLER WORDS:
 - Top Fillers: {', '.join(fillers.get('top_3', []))}
 
 Please provide:
-1. **Overall Assessment** (1-10 score for communication effectiveness)
-2. **Key Strengths** (3-4 points)
-3. **Areas for Improvement** (3-4 specific recommendations)
-4. **Specific Coaching Tips** (actionable exercises)
-5. **Confidence Level** (1-10 how confident the speaker sounds)
+1. Overall Assessment (1-10 score for communication effectiveness)
+2. Key Strengths (3-4 points)
+3. Areas for Improvement (3-4 specific recommendations)
+4. Specific Coaching Tips (actionable exercises)
+5. Confidence Level (1-10 how confident the speaker sounds)
 
 Format your response clearly with headers."""
         

@@ -15,7 +15,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import shutil
-from google.cloud import speech
+# from google.cloud import speech  # Removed: Not compatible with Python 3.11 (use local fallback)
 import os
 import librosa
 import numpy as np
@@ -1446,19 +1446,10 @@ async def upload_audio(
         
         if 1 < duration < 65:
             try:
-                client = speech.SpeechClient()
-                audio = speech.RecognitionAudio(content=contents)
-                config = speech.RecognitionConfig(
-                    encoding=speech.RecognitionConfig.AudioEncoding.WEBM_OPUS,
-                    sample_rate_hertz=48000,
-                    language_code="es-ES",
-                    alternative_language_codes=["en-US"]
-                )
-                response = client.recognize(config=config, audio=audio)
-                if response.results:
-                    transcript = response.results[0].alternatives[0].transcript
+                # Use local transcription (Google Cloud Speech removed for compatibility)
+                transcript = transcribe_local(file_path)
             except Exception as e:
-                print(f"Error en transcripción de Google Speech: {e}")
+                print(f"Error en transcripción local: {e}")
         elif duration >= 65:
             transcript = transcribe_local(file_path)
         
