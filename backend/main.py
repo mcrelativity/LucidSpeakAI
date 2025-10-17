@@ -1757,6 +1757,96 @@ async def create_stripe_payment(
         )
 
 
+@app.post("/api/confirm-stripe-payment")
+@limiter.limit("30/minute")
+async def confirm_stripe_payment(request: Request, session_id: str = None):
+    """
+    Confirm Stripe payment session and update user subscription.
+    Called from frontend after successful payment redirect.
+    
+    Args:
+        session_id: Stripe checkout session ID from success URL parameter
+    """
+    try:
+        if not session_id:
+            # Try to get from request body
+            body = await request.json()
+            session_id = body.get("session_id")
+        
+        if not session_id:
+            raise HTTPException(status_code=400, detail="session_id is required")
+        
+        # Get current user from JWT
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        if not token:
+            raise HTTPException(status_code=401, detail="Missing authorization token")
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_email = payload.get("sub")
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Retrieve Stripe session
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        if not session or session.payment_status != "paid":
+            raise HTTPException(status_code=400, detail="Payment not completed or already processed")
+        
+        # Update user to Pro tier
+        current_time = int(time.time())
+        end_date = current_time + (30 * 24 * 60 * 60)  # 30 days from now
+        
+        subscription_id = session.subscription or session_id
+        
+        update_response = supabase.table("users").update({
+            "tier": "pro",
+            "subscription_status": "active",
+            "subscription_id": subscription_id,
+            "subscription_start_date": current_time,
+            "subscription_end_date": end_date
+        }).eq("email", user_email).execute()
+        
+        if not update_response.data:
+            raise HTTPException(status_code=500, detail="Failed to update user subscription")
+        
+        # Log payment
+        supabase.table("payments").insert({
+            "order_id": subscription_id,
+            "user_email": user_email,
+            "timestamp": current_time,
+            "event": "stripe_payment_confirmed",
+            "session_id": session_id
+        }).execute()
+        
+        print(f"✅ Stripe payment confirmed for {user_email} (session: {session_id})")
+        
+        return {
+            "success": True,
+            "tier": "pro",
+            "subscription_status": "active",
+            "subscription_id": subscription_id,
+            "message": "Subscription activated successfully!"
+        }
+    
+    except stripe.error.StripeError as e:
+        print(f"❌ Stripe error in confirm payment: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Stripe error: {str(e)}"
+        )
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ Error confirming payment: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error confirming payment: {str(e)}"
+        )
+
+
 @app.post("/api/stripe-webhook")
 async def stripe_webhook(request: Request):
     """
