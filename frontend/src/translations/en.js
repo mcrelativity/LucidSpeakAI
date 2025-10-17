@@ -211,10 +211,11 @@ const en = {
       cta: "Current Plan",
       features: [
         "3 recordings per month",
-        "Basic voice analysis",
-        "Filler word detection",
-        "Pace and tone metrics",
-        "Limited history (7 days)"
+        "Basic analysis: pace, tone, and fillers",
+        "Hedge word detection",
+        "Core metrics included",
+        "Limited history (7 days)",
+        "Email support"
       ]
     },
     proTier: {
@@ -225,17 +226,20 @@ const en = {
       popular: "Most Popular",
       features: [
         "Unlimited recordings",
-        "Advanced AI analysis",
-        "Personalized insights",
-        "Context-specific exercises",
+        "Advanced AI-powered analysis",
+        "✨ Prosody analysis (pitch & intonation)",
+        "✨ Emotion detection (confidence, anxiety, engagement)",
+        "✨ AI-generated insights with GPT-4",
+        "✨ Context-specific recommendations",
         "Unlimited complete history",
-        "Progress comparison",
-        "Priority support",
-        "Access to new features"
+        "Week-to-week progress comparison",
+        "Personalized practice exercises",
+        "Early access to new features",
+        "Priority support"
       ]
     },
-    billingPeriod: "Monthly subscription",
-    cancelAnytime: "Cancel anytime",
+    billingPeriod: "Monthly subscription • 50 analyses included",
+    cancelAnytime: "Cancel anytime, no questions asked",
     loginRequired: "You must log in to subscribe.",
     processing: "Processing your subscription...",
     success: "Subscription successful! Redirecting to your account...",
@@ -243,7 +247,27 @@ const en = {
     errorVerification: "There was a problem verifying your subscription.",
     errorAuth: "Authentication error. Please log in again.",
     errorBackend: "The backend could not update the account.",
-    retryButton: "Try again"
+    retryButton: "Try again",
+    paymentMethods: "Available payment methods",
+    paypalButton: "Pay with PayPal",
+    stripeButton: "Pay with Card (Stripe)",
+    comparison: {
+      title: "Plan Comparison",
+      feature: "Feature",
+      recordings: "Recordings/month",
+      analysis: "AI Analysis",
+      history: "History",
+      exercises: "Exercises",
+      support: "Support",
+      unlimited: "Unlimited",
+      basic: "Basic",
+      advanced: "Advanced + GPT-4",
+      complete: "Complete",
+      personalized: "Personalized",
+      email: "Email",
+      priority: "Priority",
+      days7: "7 days"
+    }
   },
   Common: {
     loading: "Loading...",

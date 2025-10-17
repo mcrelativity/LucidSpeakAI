@@ -12,6 +12,7 @@ export default function PricingPage() {
     const { user, token, apiBase, refreshUser } = useAuth();
     const [{ isPending }] = usePayPalScriptReducer();
     const [status, setStatus] = useState({ state: 'idle', message: '' });
+    const [paymentMethod, setPaymentMethod] = useState(null); // 'paypal' or 'stripe'
     const t = useTranslations('Pricing');
     
     // Extract locale from pathname
@@ -52,6 +53,36 @@ export default function PricingPage() {
         } catch (error) {
             console.error("Error en el flujo de aprobación:", error);
             setStatus({ state: 'error', message: error.message || t('errorVerification') });
+        }
+    };
+
+    const handleStripePayment = async () => {
+        setStatus({ state: 'processing', message: 'Redirecting to Stripe...' });
+        try {
+            if (!token) throw new Error(t('errorAuth'));
+
+            const response = await fetch(`${apiBase}/api/stripe-payment`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Error creating checkout');
+            }
+
+            const data = await response.json();
+            // Redirect to Stripe checkout
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
+            }
+        } catch (error) {
+            console.error("Error with Stripe:", error);
+            setStatus({ state: 'error', message: error.message || 'Error initiating Stripe payment' });
+            setPaymentMethod(null);
         }
     };
 
@@ -124,10 +155,11 @@ export default function PricingPage() {
                     </div>
 
                     <h2 className="text-2xl font-bold text-white mb-2">{t('proTier.name')}</h2>
-                    <div className="mb-6">
+                    <div className="mb-2">
                         <span className="text-5xl font-bold text-sky-400">{t('proTier.price')}</span>
                         <span className="text-slate-300 ml-2">{t('proTier.period')}</span>
                     </div>
+                    <p className="text-sm text-slate-300 mb-6">{t('billingPeriod')}</p>
                     
                     <ul className="space-y-3 mb-8 flex-grow">
                         {t.raw('proTier.features').map((feature, idx) => (
@@ -135,32 +167,75 @@ export default function PricingPage() {
                                 <svg className="w-5 h-5 text-sky-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
-                                <span>{feature}</span>
+                                <span className="text-sm">{feature}</span>
                             </li>
                         ))}
                     </ul>
 
                     {isPro ? (
                         <div className="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-lg text-center">
-                            ✓ Plan Activo
+                            ✓ {locale === 'es' ? 'Plan Activo' : 'Active Plan'}
                         </div>
                     ) : (
                         <div>
-                            <p className="text-sm text-slate-300 mb-4 text-center">{t('cancelAnytime')}</p>
+                            <p className="text-xs text-slate-300 mb-4 text-center">{t('cancelAnytime')}</p>
                             
                             {status.state === 'idle' && (
                                 <div>
                                     {isPending && <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto animate-spin border-t-sky-500"></div>}
                                     {!isPending && (
                                         <>
-                                            <PayPalButtons
-                                                style={{ layout: "vertical", color: "blue" }}
-                                                createSubscription={createSubscription}
-                                                onApprove={onApprove}
-                                                onError={onError}
-                                                disabled={!user}
-                                            />
-                                            {!user && <p className="text-yellow-400 text-sm mt-4 text-center">{t('loginRequired')}</p>}
+                                            {!paymentMethod ? (
+                                                <div className="space-y-3">
+                                                    <p className="text-xs text-slate-400 text-center mb-3">{t('paymentMethods')}</p>
+                                                    <button
+                                                        onClick={() => setPaymentMethod('paypal')}
+                                                        disabled={!user}
+                                                        className="w-full bg-sky-600 hover:bg-sky-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                                    >
+                                                        {t('paypalButton')}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setPaymentMethod('stripe')}
+                                                        disabled={!user}
+                                                        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                                    >
+                                                        {t('stripeButton')}
+                                                    </button>
+                                                    {!user && <p className="text-yellow-400 text-xs mt-4 text-center">{t('loginRequired')}</p>}
+                                                </div>
+                                            ) : paymentMethod === 'paypal' ? (
+                                                <div>
+                                                    <button
+                                                        onClick={() => setPaymentMethod(null)}
+                                                        className="text-xs text-slate-400 hover:text-slate-300 mb-3 w-full text-center"
+                                                    >
+                                                        ← {locale === 'es' ? 'Cambiar método' : 'Change method'}
+                                                    </button>
+                                                    <PayPalButtons
+                                                        style={{ layout: "vertical", color: "blue" }}
+                                                        createSubscription={createSubscription}
+                                                        onApprove={onApprove}
+                                                        onError={onError}
+                                                        disabled={!user}
+                                                    />
+                                                </div>
+                                            ) : paymentMethod === 'stripe' ? (
+                                                <div>
+                                                    <button
+                                                        onClick={() => setPaymentMethod(null)}
+                                                        className="text-xs text-slate-400 hover:text-slate-300 mb-3 w-full text-center"
+                                                    >
+                                                        ← {locale === 'es' ? 'Cambiar método' : 'Change method'}
+                                                    </button>
+                                                    <button
+                                                        onClick={handleStripePayment}
+                                                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                                    >
+                                                        {locale === 'es' ? 'Continuar a Stripe' : 'Continue to Stripe'}
+                                                    </button>
+                                                </div>
+                                            ) : null}
                                         </>
                                     )}
                                 </div>
@@ -169,22 +244,22 @@ export default function PricingPage() {
                             {status.state === 'processing' && (
                                 <div className="text-center py-4">
                                     <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto mb-2 animate-spin border-t-sky-500"></div>
-                                    <p className="text-slate-300">{status.message}</p>
+                                    <p className="text-slate-300 text-sm">{status.message}</p>
                                 </div>
                             )}
 
                             {status.state === 'success' && (
                                 <div className="bg-green-600/20 border border-green-500 rounded-lg p-4 text-center">
-                                    <p className="text-green-400 font-bold">{status.message}</p>
+                                    <p className="text-green-400 font-bold text-sm">{status.message}</p>
                                 </div>
                             )}
 
                             {status.state === 'error' && (
                                 <div className="bg-red-600/20 border border-red-500 rounded-lg p-4 text-center">
-                                    <p className="text-red-400 font-bold mb-3">{status.message}</p>
+                                    <p className="text-red-400 font-bold mb-3 text-sm">{status.message}</p>
                                     <button 
-                                        onClick={() => setStatus({ state: 'idle', message: '' })} 
-                                        className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded transition-colors"
+                                        onClick={() => { setStatus({ state: 'idle', message: '' }); setPaymentMethod(null); }} 
+                                        className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded transition-colors text-sm"
                                     >
                                         {t('retryButton')}
                                     </button>
@@ -194,6 +269,42 @@ export default function PricingPage() {
                     )}
                 </motion.div>
             </div>
+
+            {/* Detailed Comparison Section */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="w-full max-w-5xl mt-16 bg-slate-800/50 border border-slate-700 rounded-2xl p-8"
+            >
+                <h3 className="text-2xl font-bold text-white mb-8 text-center">{locale === 'es' ? 'Comparación de Planes' : 'Plan Comparison'}</h3>
+                <div className="grid md:grid-cols-3 gap-4 text-sm">
+                    <div className="text-slate-300">
+                        <p className="font-semibold text-white mb-4">{locale === 'es' ? 'Feature' : 'Feature'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Grabaciones/mes' : 'Recordings/month'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Análisis IA' : 'AI Analysis'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Historial' : 'History'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Ejercicios' : 'Exercises'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Soporte' : 'Support'}</p>
+                    </div>
+                    <div className="text-slate-300 border-l border-slate-600 pl-4">
+                        <p className="font-semibold text-white mb-4">{t('freeTier.name')}</p>
+                        <p className="mb-3">3</p>
+                        <p className="mb-3">{locale === 'es' ? 'Básico' : 'Basic'}</p>
+                        <p className="mb-3">7 {locale === 'es' ? 'días' : 'days'}</p>
+                        <p className="mb-3">-</p>
+                        <p className="mb-3">{locale === 'es' ? 'Email' : 'Email'}</p>
+                    </div>
+                    <div className="text-white border-l border-sky-500 pl-4">
+                        <p className="font-semibold text-sky-400 mb-4">{t('proTier.name')}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Ilimitadas' : 'Unlimited'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Avanzado + GPT-4' : 'Advanced + GPT-4'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Completo' : 'Complete'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Personalizados' : 'Personalized'}</p>
+                        <p className="mb-3">{locale === 'es' ? 'Prioritario' : 'Priority'}</p>
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 }
