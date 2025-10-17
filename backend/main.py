@@ -33,6 +33,9 @@ from supabase import create_client, Client
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from services.job_queue import get_job_queue, add_analysis_job
+from services.pro_analyzer import ProAudioAnalyzer
+import stripe
 
 load_dotenv()
 ffmpeg_path = os.getenv("FFMPEG_PATH")
@@ -60,6 +63,18 @@ supabase: Client = create_client(
     SUPABASE_URL,
     SUPABASE_SERVICE_KEY or SUPABASE_ANON_KEY
 )
+
+# ==============================================================================
+# STRIPE CONFIGURATION
+# ==============================================================================
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
+
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+    print("✅ Stripe configured")
+else:
+    print("⚠️ Warning: STRIPE_SECRET_KEY not set. Stripe payments will not work.")
 
 # ==============================================================================
 # GOOGLE CLOUD CONFIGURATION
@@ -1616,6 +1631,221 @@ async def confirm_payment(
     
     return {"status": "success", "message": "La cuenta ha sido actualizada a Pro."}
 
+# ==============================================================================
+# STRIPE PAYMENT INTEGRATION
+# ==============================================================================
+
+@app.post("/api/stripe-payment")
+@limiter.limit("10/minute")
+async def create_stripe_payment(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a Stripe checkout session for Pro tier subscription.
+    
+    Args:
+        current_user: Authenticated user from JWT token
+        
+    Returns:
+        {"session_id": str, "checkout_url": str, "message": str}
+        
+    Raises:
+        HTTPException 400: Stripe not configured
+        HTTPException 409: User already has active subscription
+    """
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(
+            status_code=400,
+            detail="Stripe is not configured. Please contact support."
+        )
+    
+    user_email = current_user.get("email")
+    
+    # Check if user already has active subscription
+    user_response = supabase.table("users").select("*").eq("email", user_email).execute()
+    if not user_response.data:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    user = user_response.data[0]
+    user_tier = user.get("tier", "free")
+    subscription_status = user.get("subscription_status", "inactive")
+    subscription_end_date = user.get("subscription_end_date", 0)
+    
+    current_time = int(time.time())
+    
+    # Check if subscription is still active
+    if user_tier == "pro" and subscription_status == "active" and subscription_end_date > current_time:
+        raise HTTPException(
+            status_code=409,
+            detail="You already have an active Pro subscription"
+        )
+    
+    try:
+        # Create Stripe checkout session
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": "LucidSpeak Pro Subscription",
+                            "description": "Monthly Pro tier subscription - 50 analyses/month with AI insights",
+                        },
+                        "unit_amount": 499,  # $4.99 in cents
+                        "recurring": {
+                            "interval": "month",
+                            "interval_count": 1,
+                        }
+                    },
+                    "quantity": 1,
+                }
+            ],
+            mode="subscription",
+            success_url=f"{os.getenv('FRONTEND_URL', 'https://lucid-speak-ai.vercel.app')}/subscription-success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{os.getenv('FRONTEND_URL', 'https://lucid-speak-ai.vercel.app')}/pricing",
+            customer_email=user_email,
+            metadata={
+                "user_email": user_email,
+            }
+        )
+        
+        # Log payment initiation
+        supabase.table("payments").insert({
+            "order_id": session.id,
+            "user_email": user_email,
+            "timestamp": current_time,
+            "event": "stripe_checkout_session_created"
+        }).execute()
+        
+        return {
+            "session_id": session.id,
+            "checkout_url": session.url,
+            "message": "Stripe checkout session created. Redirect to checkout_url to complete payment."
+        }
+    
+    except stripe.error.StripeError as e:
+        print(f"Stripe error: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Stripe error: {str(e)}"
+        )
+    except Exception as e:
+        print(f"Error creating Stripe session: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error creating payment session: {str(e)}"
+        )
+
+
+@app.post("/api/stripe-webhook")
+async def stripe_webhook(request: Request):
+    """
+    Handle Stripe webhook events for subscription updates.
+    
+    Events handled:
+    - checkout.session.completed: User completed payment
+    - customer.subscription.updated: Subscription changed
+    - customer.subscription.deleted: Subscription cancelled
+    """
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=400, detail="Stripe not configured")
+    
+    try:
+        # Verify webhook signature (optional for now, add webhook secret later)
+        event = json.loads(payload)
+        
+        # Handle checkout.session.completed
+        if event["type"] == "checkout.session.completed":
+            session = event["data"]["object"]
+            user_email = session.get("customer_email")
+            subscription_id = session.get("subscription")
+            
+            if user_email and subscription_id:
+                current_time = int(time.time())
+                end_date = current_time + (30 * 24 * 60 * 60)  # 30 days from now
+                
+                # Update user to Pro tier
+                supabase.table("users").update({
+                    "tier": "pro",
+                    "subscription_status": "active",
+                    "subscription_id": subscription_id,
+                    "subscription_start_date": current_time,
+                    "subscription_end_date": end_date
+                }).eq("email", user_email).execute()
+                
+                # Log payment
+                supabase.table("payments").insert({
+                    "order_id": subscription_id,
+                    "user_email": user_email,
+                    "timestamp": current_time,
+                    "event": "stripe_subscription_activated"
+                }).execute()
+                
+                print(f"✅ Stripe subscription activated for {user_email}")
+        
+        # Handle customer.subscription.deleted
+        elif event["type"] == "customer.subscription.deleted":
+            subscription = event["data"]["object"]
+            subscription_id = subscription.get("id")
+            
+            # Find user with this subscription
+            users_response = supabase.table("users").select("*").eq("subscription_id", subscription_id).execute()
+            if users_response.data:
+                user = users_response.data[0]
+                user_email = user.get("email")
+                
+                # Downgrade to free tier
+                supabase.table("users").update({
+                    "tier": "free",
+                    "subscription_status": "cancelled"
+                }).eq("email", user_email).execute()
+                
+                # Log cancellation
+                supabase.table("payments").insert({
+                    "order_id": subscription_id,
+                    "user_email": user_email,
+                    "timestamp": int(time.time()),
+                    "event": "stripe_subscription_cancelled"
+                }).execute()
+                
+                print(f"✅ Stripe subscription cancelled for {user_email}")
+        
+        return {"status": "received"}
+    
+    except Exception as e:
+        print(f"Error processing webhook: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/subscription-status")
+async def get_subscription_status(current_user: dict = Depends(get_current_user)):
+    """
+    Get current subscription status for user.
+    
+    Returns:
+        {"tier": str, "subscription_status": str, "subscription_end_date": int}
+    """
+    user_email = current_user.get("email")
+    
+    user_response = supabase.table("users").select("*").eq("email", user_email).execute()
+    if not user_response.data:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    user = user_response.data[0]
+    
+    return {
+        "tier": user.get("tier", "free"),
+        "subscription_status": user.get("subscription_status", "inactive"),
+        "subscription_end_date": user.get("subscription_end_date", 0),
+        "subscription_id": user.get("subscription_id"),
+        "message": "Use this to check if user is Pro or free tier"
+    }
+
 @app.post("/cancel-subscription")
 async def cancel_subscription(
     user: dict = Depends(get_current_user)
@@ -1673,6 +1903,239 @@ async def reactivate_subscription(
     }).execute()
     
     return {"status": "success", "message": "La suscripción ha sido reactivada."}
+
+# ==============================================================================
+# PRO AUDIO ANALYSIS - NEW ENDPOINTS
+# ==============================================================================
+
+@app.post("/api/pro-analysis")
+@limiter.limit("10/minute")
+async def create_pro_analysis(
+    request: Request,
+    recording_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Start a pro audio analysis job for a recording.
+    
+    - Checks user has active Pro subscription
+    - Validates analysis count vs 50/month limit
+    - Queues the audio for background processing
+    - Returns job_id immediately for polling
+    
+    Args:
+        recording_id: ID of the recording to analyze
+        current_user: Authenticated user from JWT token
+        
+    Returns:
+        {"job_id": str, "status": "queued", "message": str}
+        
+    Raises:
+        HTTPException 403: User is not Pro subscriber or subscription expired
+        HTTPException 404: Recording not found or doesn't belong to user
+        HTTPException 429: Analysis quota exceeded (50/month)
+    """
+    user_email = current_user.get("email")
+    
+    # 1. Check user has active Pro subscription
+    user_response = supabase.table("users").select("*").eq("email", user_email).execute()
+    if not user_response.data:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    user = user_response.data[0]
+    user_tier = user.get("tier", "free")
+    subscription_status = user.get("subscription_status", "inactive")
+    subscription_end_date = user.get("subscription_end_date", 0)
+    
+    # Verify Pro tier
+    if user_tier != "pro":
+        raise HTTPException(
+            status_code=403,
+            detail="Pro analysis requires an active Pro subscription"
+        )
+    
+    # Verify subscription is active and not expired
+    current_time = int(time.time())
+    if subscription_status != "active" or subscription_end_date < current_time:
+        raise HTTPException(
+            status_code=403,
+            detail="Pro subscription is expired or inactive"
+        )
+    
+    # 2. Check analysis quota (50 analyses per month)
+    month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month_start_ts = int(month_start.timestamp())
+    
+    analyses_this_month = supabase.table("pro_analyses").select("id", count="exact").where(
+        f"user_email = '{user_email}' AND created_at >= {month_start_ts}"
+    ).execute()
+    
+    analysis_count = analyses_this_month.count or 0
+    if analysis_count >= 50:
+        raise HTTPException(
+            status_code=429,
+            detail="Monthly analysis quota (50) exceeded. Upgrade or wait for next billing cycle."
+        )
+    
+    # 3. Get recording from Supabase
+    recording_response = supabase.table("sessions").select("*").eq("id", recording_id).execute()
+    if not recording_response.data:
+        raise HTTPException(status_code=404, detail="Recording not found")
+    
+    recording = recording_response.data[0]
+    
+    # Verify recording belongs to user
+    if recording.get("user_email") != user_email:
+        raise HTTPException(status_code=403, detail="Recording does not belong to user")
+    
+    # 4. Queue for background processing
+    audio_path = recording.get("file_path")
+    transcript = recording.get("transcript", "")
+    
+    try:
+        job_id = await add_analysis_job(
+            user_email=user_email,
+            audio_path=audio_path,
+            transcript=transcript,
+            recording_id=recording_id
+        )
+        
+        # Log analysis request to Supabase
+        supabase.table("pro_analyses").insert({
+            "user_email": user_email,
+            "recording_id": recording_id,
+            "job_id": job_id,
+            "status": "queued",
+            "created_at": current_time
+        }).execute()
+        
+        return {
+            "job_id": job_id,
+            "status": "queued",
+            "message": "Analysis queued successfully. Check status with GET /api/job/{job_id}"
+        }
+    
+    except Exception as e:
+        print(f"Error queuing pro analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to queue analysis: {str(e)}"
+        )
+
+
+@app.get("/api/job/{job_id}")
+@limiter.limit("30/minute")
+async def get_job_status(
+    request: Request,
+    job_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Check the status of a pro analysis job.
+    
+    Polling endpoint to check if analysis is complete.
+    Returns full result when ready, progress while processing.
+    
+    Args:
+        job_id: The job ID returned from /api/pro-analysis
+        current_user: Authenticated user from JWT token
+        
+    Returns:
+        {
+            "job_id": str,
+            "status": "queued|processing|completed|failed|cancelled",
+            "progress": 0-100,
+            "result": {...} or null,
+            "error": str or null,
+            "created_at": timestamp,
+            "started_at": timestamp or null,
+            "completed_at": timestamp or null
+        }
+        
+    Raises:
+        HTTPException 404: Job not found
+        HTTPException 403: Job doesn't belong to user
+    """
+    try:
+        job_queue = get_job_queue()
+        job = job_queue.get_job_status(job_id)
+        
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        
+        # Verify job belongs to user
+        if job.get("user_email") != current_user.get("email"):
+            raise HTTPException(status_code=403, detail="Job does not belong to user")
+        
+        return job
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error retrieving job status: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve job status: {str(e)}"
+        )
+
+
+@app.delete("/api/job/{job_id}")
+@limiter.limit("10/minute")
+async def cancel_job(
+    request: Request,
+    job_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Cancel a queued (not yet processing) pro analysis job.
+    
+    Can only cancel jobs with status="queued". Processing/completed jobs cannot be cancelled.
+    
+    Args:
+        job_id: The job ID to cancel
+        current_user: Authenticated user from JWT token
+        
+    Returns:
+        {"status": "cancelled", "message": str}
+        
+    Raises:
+        HTTPException 404: Job not found
+        HTTPException 403: Job doesn't belong to user or cannot be cancelled
+    """
+    try:
+        job_queue = get_job_queue()
+        job = job_queue.get_job_status(job_id)
+        
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        
+        # Verify job belongs to user
+        if job.get("user_email") != current_user.get("email"):
+            raise HTTPException(status_code=403, detail="Job does not belong to user")
+        
+        # Check if job can be cancelled (only queued jobs)
+        if job.get("status") != "queued":
+            raise HTTPException(
+                status_code=403,
+                detail=f"Cannot cancel job with status '{job.get('status')}'. Only 'queued' jobs can be cancelled."
+            )
+        
+        # Cancel the job
+        job_queue.cancel_job(job_id)
+        
+        return {
+            "status": "cancelled",
+            "message": f"Job {job_id} has been cancelled"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error cancelling job: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to cancel job: {str(e)}"
+        )
 
 # ==============================================================================
 # HEALTH CHECK
