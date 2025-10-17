@@ -27,5 +27,30 @@ google-cloud-storage==2.18.2
 # Environment management
 python-dotenv==1.0.1
 
+# ============================================================================
+# PRO AUDIO ANALYSIS FEATURES (Pro/Pro+ Users)
+# ============================================================================
+
+# OpenAI Integration
+openai==1.59.0
+
+# Prosody Analysis (Pitch, Intensity, Speaking Rate)
+# Requires: Praat installed on system (see docs/PRO_AUDIO_ANALYSIS_ARCHITECTURE.md)
+parselmouth==0.4.3
+
+# Advanced Audio Features (Optional: for enhanced analysis)
+# essentia==2.1b6.dev20240523  # Uncomment for music/audio feature extraction
+
+# Emotion Detection & Speaker Diarization (Optional for Pro+ tier)
+# Note: pyannote-audio requires PyTorch, may increase deployment size
+# pyannote-audio==3.1.1  # Uncomment for emotion detection
+
+# Deep Learning (Required for emotion models if using pyannote)
+# torch==2.1.0  # Uncomment if enabling emotion detection
+# transformers==4.45.0  # Uncomment if enabling emotion detection
+
+# ============================================================================
 # System dependencies note:
 # ffmpeg is required for pydub (installed via apt-get on Render)
+# Praat is required for parselmouth (optional for pro features)
+# ============================================================================

@@ -211,10 +211,11 @@ const es = {
       cta: "Plan Actual",
       features: [
         "3 grabaciones por mes",
-        "Análisis básico de voz",
-        "Detección de muletillas",
-        "Métricas de ritmo y tono",
-        "Historial limitado (7 días)"
+        "Análisis básico: ritmo, tono y muletillas",
+        "Detección de palabras de duda",
+        "Métricas fundamentales",
+        "Historial limitado (7 días)",
+        "Soporte por email"
       ]
     },
     proTier: {
@@ -226,16 +227,19 @@ const es = {
       features: [
         "Grabaciones ilimitadas",
         "Análisis avanzado con IA",
-        "Insights personalizados",
-        "Ejercicios específicos por contexto",
+        "✨ Análisis de prosody (pitch y entonación)",
+        "✨ Detección de emociones (confianza, ansiedad, engagement)",
+        "✨ Insights personalizados con GPT-4",
+        "✨ Recomendaciones específicas por contexto",
         "Historial completo ilimitado",
-        "Comparación de progreso",
-        "Soporte prioritario",
-        "Acceso a nuevas funciones"
+        "Comparación de progreso (semana a semana)",
+        "Ejercicios prácticos personalizados",
+        "Acceso a nuevas funciones antes que nadie",
+        "Soporte prioritario"
       ]
     },
-    billingPeriod: "Suscripción mensual",
-    cancelAnytime: "Cancela en cualquier momento",
+    billingPeriod: "Suscripción mensual • Análisis ilimitados",
+    cancelAnytime: "Cancela en cualquier momento, sin preguntas",
     loginRequired: "Debes iniciar sesión para poder suscribirte.",
     processing: "Procesando tu suscripción...",
     success: "¡Suscripción exitosa! Redirigiendo a tu cuenta...",
@@ -243,7 +247,27 @@ const es = {
     errorVerification: "Hubo un problema al verificar tu suscripción.",
     errorAuth: "Error de autenticación. Por favor, inicia sesión de nuevo.",
     errorBackend: "El backend no pudo actualizar la cuenta.",
-    retryButton: "Intentar de nuevo"
+    retryButton: "Intentar de nuevo",
+    paymentMethods: "Métodos de pago disponibles",
+    paypalButton: "Pagar con PayPal",
+    stripeButton: "Pagar con Tarjeta (Stripe)",
+    comparison: {
+      title: "Comparación de Planes",
+      feature: "Característica",
+      recordings: "Grabaciones/mes",
+      analysis: "Análisis IA",
+      history: "Historial",
+      exercises: "Ejercicios",
+      support: "Soporte",
+      unlimited: "Ilimitadas",
+      basic: "Básico",
+      advanced: "Avanzado + GPT-4",
+      complete: "Completo",
+      personalized: "Personalizados",
+      email: "Email",
+      priority: "Prioritario",
+      days7: "7 días"
+    }
   },
   Common: {
     loading: "Cargando...",
