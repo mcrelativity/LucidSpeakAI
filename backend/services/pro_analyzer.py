@@ -53,7 +53,8 @@ class ProAudioAnalyzer:
         audio_path: str, 
         transcript: str,
         context: str = "general",
-        language: str = "en"
+        language: str = "en",
+        job = None  # Optional job reference for progress tracking
     ) -> Dict[str, Any]:
         """
         Perform comprehensive pro analysis on audio and transcript.
@@ -63,6 +64,7 @@ class ProAudioAnalyzer:
             transcript: Transcribed text from audio
             context: Context of the speech (interview, presentation, casual, etc.)
             language: Language code (en, es)
+            job: Optional job object to track progress
         
         Returns:
             Dictionary with all analysis results
@@ -87,6 +89,7 @@ class ProAudioAnalyzer:
         
         try:
             # 1. Extract audio metrics
+            if job: job.progress = 20
             audio_metrics = self._extract_audio_metrics(audio_path)
             results["metrics"] = audio_metrics
         except Exception as e:
@@ -94,6 +97,7 @@ class ProAudioAnalyzer:
         
         try:
             # 2. Analyze prosody (if Parselmouth available)
+            if job: job.progress = 35
             if PARSELMOUTH_AVAILABLE:
                 prosody_data = self._analyze_prosody(audio_path)
                 results["prosody"] = prosody_data
@@ -102,6 +106,7 @@ class ProAudioAnalyzer:
         
         try:
             # 3. Detect filler words
+            if job: job.progress = 50
             fillers_data = self._extract_fillers(transcript)
             results["fillers"] = fillers_data
         except Exception as e:
@@ -109,6 +114,7 @@ class ProAudioAnalyzer:
         
         try:
             # 4. Emotion detection (basic, from audio patterns)
+            if job: job.progress = 65
             emotions = self._detect_emotions(results.get("metrics", {}), results.get("prosody", {}))
             results["emotions"] = emotions
         except Exception as e:
@@ -116,6 +122,7 @@ class ProAudioAnalyzer:
         
         try:
             # 5. GPT synthesis (if OpenAI available)
+            if job: job.progress = 80
             if self.openai_client:
                 insights = await self._get_gpt_insights(
                     transcript=transcript,
@@ -557,7 +564,8 @@ async def analyze_audio_for_pro_user(
     audio_path: str,
     transcript: str,
     context: str = "general",
-    language: str = "en"
+    language: str = "en",
+    job = None  # Optional job reference for progress tracking
 ) -> Dict[str, Any]:
     """
     Convenience function to run full pro analysis.
@@ -566,7 +574,8 @@ async def analyze_audio_for_pro_user(
         results = await analyze_audio_for_pro_user(
             audio_path="audio.wav",
             transcript="Hello world...",
-            context="presentation"
+            context="presentation",
+            job=job_object  # Optional, for progress tracking
         )
     """
     analyzer = ProAudioAnalyzer()
@@ -574,6 +583,7 @@ async def analyze_audio_for_pro_user(
         audio_path=audio_path,
         transcript=transcript,
         context=context,
-        language=language
+        language=language,
+        job=job
     )
     return results

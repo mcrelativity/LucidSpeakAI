@@ -140,17 +140,18 @@ class JobQueue:
             # Import here to avoid circular imports
             from .pro_analyzer import analyze_audio_for_pro_user
             
-            job.progress = 20
+            job.progress = 15
             
-            # Run analysis
+            # Run analysis - pass job object for progress tracking
             result = await analyze_audio_for_pro_user(
                 audio_path=job.audio_path,
                 transcript=job.transcript,
                 context=job.metadata.get("context", "general"),
-                language=job.metadata.get("language", "en")
+                language=job.metadata.get("language", "en"),
+                job=job  # Pass job reference for progress updates
             )
             
-            job.progress = 90
+            job.progress = 95
             job.result = result
             job.status = JobStatus.COMPLETED
             job.completed_at = datetime.now()
@@ -162,6 +163,7 @@ class JobQueue:
             job.status = JobStatus.FAILED
             job.error = str(e)
             job.completed_at = datetime.now()
+            job.progress = 0
             print(f"❌ Job {job_id} failed: {str(e)}")
     
     def get_job(self, job_id: str) -> Optional[Job]:
