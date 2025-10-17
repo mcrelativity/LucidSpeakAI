@@ -1,7 +1,6 @@
 "use client";
 
 import { AuthProvider } from "@/context/AuthContext";
-import { I18nProvider } from "@/context/I18nContext";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 
 export function Providers({ children, locale }) {
@@ -13,12 +12,10 @@ export function Providers({ children, locale }) {
   };
 
   return (
-    <I18nProvider initialLocale={locale}>
-      <PayPalScriptProvider options={initialPayPalOptions}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      </PayPalScriptProvider>
-    </I18nProvider>
+    <PayPalScriptProvider options={initialPayPalOptions}>
+      <AuthProvider>
+        {children}
+      </AuthProvider>
+    </PayPalScriptProvider>
   );
 }
