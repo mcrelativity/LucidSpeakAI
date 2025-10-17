@@ -49,3 +49,10 @@ logs/
 # Build
 dist/
 build/
+
+# Documentation (Internal notes - do not commit)
+*.md
+!README.md
+!backend/README.md
+!frontend/README.md
+!docs/
