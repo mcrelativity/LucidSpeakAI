@@ -238,7 +238,7 @@ const es = {
         "Soporte prioritario"
       ]
     },
-    billingPeriod: "Suscripción mensual • 50 análisis incluidos",
+    billingPeriod: "Suscripción mensual • Análisis ilimitados",
     cancelAnytime: "Cancela en cualquier momento, sin preguntas",
     loginRequired: "Debes iniciar sesión para poder suscribirte.",
     processing: "Procesando tu suscripción...",

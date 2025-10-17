@@ -238,7 +238,7 @@ const en = {
         "Priority support"
       ]
     },
-    billingPeriod: "Monthly subscription • 50 analyses included",
+    billingPeriod: "Monthly subscription • Unlimited analyses",
     cancelAnytime: "Cancel anytime, no questions asked",
     loginRequired: "You must log in to subscribe.",
     processing: "Processing your subscription...",
