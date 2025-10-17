@@ -1,10 +1,10 @@
-# 🎙️ LucidSpeak AI
+# 🎙️ Intone
 
 <div align="center">
 
-![LucidSpeak Banner](https://img.shields.io/badge/LucidSpeak-AI%20Speech%20Analysis-0ea5e9?style=for-the-badge)
+![Intone Banner](https://img.shields.io/badge/Intone-AI%20Speech%20Analysis-0ea5e9?style=for-the-badge)
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-lucid--speak--ai.vercel.app-00C7B7?style=for-the-badge)](https://lucid-speak-ai.vercel.app)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-intone.app-00C7B7?style=for-the-badge)](https://intone.app)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -23,7 +23,7 @@
 
 ### 📖 Overview
 
-**LucidSpeak AI** is an advanced speech analysis platform that leverages artificial intelligence to help users improve their communication skills. By combining acoustic analysis, transcription, and AI-powered insights, LucidSpeak provides detailed feedback on speech patterns, clarity, pace, and more.
+**Intone** is an advanced speech analysis platform that leverages artificial intelligence to help users improve their communication skills. By combining acoustic analysis, transcription, and AI-powered insights, Intone provides detailed feedback on speech patterns, clarity, pace, and more.
 
 ### ✨ Key Features
 

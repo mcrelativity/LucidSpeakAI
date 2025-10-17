@@ -1706,7 +1706,7 @@ async def create_stripe_payment(
                     "price_data": {
                         "currency": "usd",
                         "product_data": {
-                            "name": "LucidSpeak Pro Subscription",
+                            "name": "Intone Pro Subscription",
                             "description": "Monthly Pro tier subscription - 50 analyses/month with AI insights",
                         },
                         "unit_amount": 499,  # $4.99 in cents
@@ -2158,7 +2158,7 @@ async def cancel_job(
 # ==============================================================================
 @app.get("/")
 async def root():
-    return {"message": "LucidSpeak API is running with Supabase", "version": "3.0"}
+    return {"message": "Intone API is running with Supabase", "version": "3.0"}
 
 @app.get("/health")
 async def health_check():
@@ -2166,5 +2166,5 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": int(time.time()),
-        "service": "LucidSpeak API"
+        "service": "Intone API"
     }
