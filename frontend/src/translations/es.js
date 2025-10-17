@@ -22,7 +22,7 @@ const es = {
     feature2Text: "Recibe métricas claras sobre ritmo, muletillas, variación de tono y palabras de duda.",
     feature3Title: "Sigue tu Progreso",
     feature3Text: "Observa cómo mejoras con el tiempo y conviértete en un orador de élite.",
-    testimonialText: "\"LucidSpeak cambió mi forma de preparar presentaciones. En una semana, reduje mis 'ehh...' a la mitad y ahora hablo con mucha más seguridad.\"",
+    testimonialText: "\"Intone cambió mi forma de preparar presentaciones. En una semana, reduje mis 'ehh...' a la mitad y ahora hablo con mucha más seguridad.\"",
     testimonialAuthor: "- Alex, Product Manager",
     finalCtaTitle: "¿Listo para transformar tu voz?",
     finalCtaSubtitle: "Tu primera sesión de análisis es gratis.",

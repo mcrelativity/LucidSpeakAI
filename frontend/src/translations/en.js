@@ -22,7 +22,7 @@ const en = {
     feature2Text: "Receive clear metrics on pace, filler words, pitch variation, and hedge words.",
     feature3Title: "Track Your Progress",
     feature3Text: "With your practice history, watch how you improve over time and become an elite speaker.",
-    testimonialText: "\"LucidSpeak changed how I prep for presentations. In one week, I cut my 'umms...' in half and now I speak with much more confidence.\"",
+    testimonialText: "\"Intone changed how I prep for presentations. In one week, I cut my 'umms...' in half and now I speak with much more confidence.\"",
     testimonialAuthor: "- Alex, Product Manager",
     finalCtaTitle: "Ready to transform your voice?",
     finalCtaSubtitle: "Your first analysis session is free.",

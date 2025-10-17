@@ -54,7 +54,7 @@ const Header = () => {
     return (
         <header className="w-full max-w-6xl px-6 py-4 flex justify-between items-center text-white mb-8">
             <Link href="/welcome" className="text-2xl font-bold text-sky-400 hover:text-sky-300 transition-colors z-30">
-                LucidSpeak
+                Intone
             </Link>
             
             <nav className="hidden md:flex items-center gap-2 text-slate-300">

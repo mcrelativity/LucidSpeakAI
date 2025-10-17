@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white p-4">
-            <Link href={`/${locale}`} className="text-3xl font-bold text-sky-400 mb-8">LucidSpeak</Link>
+            <Link href={`/${locale}`} className="text-3xl font-bold text-sky-400 mb-8">Intone</Link>
             <form onSubmit={handleSubmit} className="w-full max-w-sm bg-slate-800 p-8 rounded-lg shadow-lg">
                 <h2 className="text-2xl font-bold text-center text-white mb-6">{t('title')}</h2>
                 {error && <p className="bg-red-500/20 text-red-400 text-center p-2 rounded mb-4">{error}</p>}
