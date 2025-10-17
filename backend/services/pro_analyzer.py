@@ -146,13 +146,17 @@ class ProAudioAnalyzer:
     
     def _extract_audio_metrics(self, audio_path: str) -> Dict[str, Any]:
         """
-        Extract core audio features using librosa.
+        Extract core audio features using librosa with memory optimization.
+        Uses 16kHz sample rate to reduce memory usage on Render FREE tier.
         
         Returns:
             Dictionary with audio characteristics
         """
         try:
-            y, sr = librosa.load(audio_path, sr=None)
+            # Load with reduced sample rate (16kHz sufficient for speech analysis)
+            y, sr = librosa.load(audio_path, sr=16000, mono=True)
+        except MemoryError:
+            raise ValueError("Audio file too large (out of memory). Try shorter recording.")
         except Exception as e:
             raise ValueError(f"Could not load audio file: {str(e)}")
         

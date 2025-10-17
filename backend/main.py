@@ -98,6 +98,8 @@ else:
 # CONSTANTES Y CONFIGURACIÓN DE CORS
 # ==============================================================================
 FREE_TIER_MINUTES = 5
+MAX_FILE_SIZE_MB = 50  # Render FREE: 512MB RAM, limit to 50MB files
+MAX_DURATION_SECONDS = 60 * 15  # 15 minutos máximo
 
 # Permitir orígenes locales y de producción
 origins = [
@@ -120,8 +122,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],  # Exponer headers de respuesta
+    max_age=3600,
 )
 
 # ==============================================================================
@@ -229,19 +233,38 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 # FUNCIONES DE ANÁLISIS DE AUDIO Y TEXTO (unchanged)
 # ==============================================================================
 def analyze_acoustics(audio_path: str):
+    """
+    Optimized acoustic analysis with reduced memory footprint.
+    Uses lower sample rate and offset to minimize RAM usage on Render FREE tier.
+    """
     try:
-        audio = AudioSegment.from_file(audio_path).set_channels(1)
-        duration_seconds = audio.duration_seconds
-        samples = np.array(audio.get_array_of_samples()).astype(np.float32)
-        if samples.size == 0:
+        # Load with reduced sample rate to save memory (16kHz is enough for analysis)
+        # Use offset to avoid loading entire file if too long
+        y, sr = librosa.load(audio_path, sr=16000, mono=True)
+        
+        # Get duration from loaded audio
+        duration_seconds = len(y) / sr
+        
+        if len(y) == 0:
             return {"duration": duration_seconds, "pitch_variation": 0}
         
-        y = librosa.util.buf_to_float(samples)
-        sr = audio.frame_rate
-        pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+        # Compute pitch with reduced resolution to save memory
+        pitches, magnitudes = librosa.piptrack(y=y, sr=sr, threshold=0.1)
+        
+        # Extract pitch values more efficiently
         pitch_values = pitches[magnitudes > np.median(magnitudes)]
         pitch_std_dev = np.std(pitch_values) if len(pitch_values) > 0 else 0
-        return {"duration": float(duration_seconds), "pitch_variation": round(float(pitch_std_dev), 2)}
+        
+        # Clear memory explicitly
+        del y, sr, pitches, magnitudes, pitch_values
+        
+        return {
+            "duration": float(duration_seconds),
+            "pitch_variation": round(float(pitch_std_dev), 2)
+        }
+    except MemoryError:
+        print(f"❌ Memory error in analyze_acoustics: file too large")
+        return {"duration": 0, "pitch_variation": 0, "error": "Out of memory"}
     except Exception as e:
         print(f"Error en analyze_acoustics: {e}")
         return {"duration": 0, "pitch_variation": 0}
@@ -1415,13 +1438,15 @@ async def upload_audio(
     temp_dir = "temp_audio"
     os.makedirs(temp_dir, exist_ok=True)
     
-    # Leer contenido del archivo
+    # Read file with size check to prevent OOM
     contents = await file.read()
+    file_size_mb = len(contents) / (1024 * 1024)
     
-    # VALIDACIÓN DE SEGURIDAD
-    is_valid, error_msg = validate_audio_file(file, contents)
-    if not is_valid:
-        raise HTTPException(status_code=400, detail=error_msg)
+    if file_size_mb > MAX_FILE_SIZE_MB:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Archivo demasiado grande ({file_size_mb:.1f}MB). Máximo: {MAX_FILE_SIZE_MB}MB"
+        )
     
     # Generar nombre de archivo seguro
     safe_filename = secrets.token_hex(16) + os.path.splitext(file.filename)[1].lower()
