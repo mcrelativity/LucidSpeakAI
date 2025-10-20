@@ -1,4 +1,4 @@
-# 🎙️ Intone
+# 🎙️ Intone (Ex LucidSpeakAI)
 
 <div align="center">
 
